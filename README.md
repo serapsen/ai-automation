@@ -65,6 +65,20 @@ python -m agent.monitor --watch --interval 10
 ```
 - Agent triggers the pipeline for each new brief and logs a draft email if assets per product/aspect are <3.
 
+## Run Tests
+Use Python's builtin unittest discovery. On Windows + Git Bash, using the venv's interpreter path is most reliable:
+```
+./.venv/Scripts/python.exe -m unittest discover -v
+```
+If you prefer to activate the venv first:
+```
+source ./.venv/Scripts/activate
+python -m unittest discover -v
+```
+Notes:
+- Tests live under `tests/` and avoid external API calls.
+- Discovery pattern defaults to files matching `test*.py`.
+
 ## Example Output
 - Aspect folders on disk use `x` instead of `:` for cross-platform safety: `1x1`, `9x16`, `16x9`.
 - Example after running the sample brief:
