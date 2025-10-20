@@ -1,0 +1,76 @@
+%% Mermaid diagram: Creative Automation Pipeline Architecture
+flowchart TB
+  subgraph "Input Layer"
+    A["Campaign Brief<br/>YAML/JSON<br/>2+ products<br/>region, audience, message"]
+    B["Input Assets<br/>input/assets/{product}/{aspect}/<br/>Reusable existing creatives"]
+    C["Brand Assets<br/>logo.png<br/>colors.primary"]
+  end
+
+  subgraph "Orchestration Layer"
+    D["Pipeline Orchestrator<br/>main.py<br/>run_pipeline()"]
+    E["Asset Ingestion<br/>asset_ingestion.py<br/>load_brief(), list_existing_assets()"]
+    F{"Existing<br/>Assets?"}
+  end
+
+  subgraph "Asset Generation Layer"
+    G["Reuse Path<br/>Copy to output<br/>Preserve quality"]
+    H["Image Generator<br/>OpenAI Images API<br/>gpt-image-1 or dall-e-3<br/>1024x1024 base"]
+    I{"API<br/>Success?"}
+    J["Fallback Generator<br/>Pillow RGB placeholder<br/>Product name overlay"]
+  end
+
+  subgraph "Post-Processing Layer"
+    K["Text Overlay<br/>overlay_text()<br/>Campaign message<br/>Brand color + alpha"]
+    L["Logo Overlay<br/>overlay_logo()<br/>Brand identity<br/>1/8 width, top-left"]
+    M["Compliance Check<br/>brand_compliance_summary()<br/>Color usage, logo presence"]
+    N["Text Moderation<br/>moderate_text()<br/>Prohibited words filter"]
+  end
+
+  subgraph "Output Layer"
+    O["File Organization<br/>output/{product}/{aspect}/<br/>Filesystem-safe naming"]
+    P["1x1 Square<br/>1024x1024<br/>Social feeds"]
+    Q["9x16 Portrait<br/>1080x1920<br/>Stories, Reels"]
+    R["16x9 Landscape<br/>1920x1080<br/>YouTube, Display"]
+    S["Naming Convention<br/>exist_N_final.png<br/>gen_N_final.png"]
+  end
+
+  subgraph "Monitoring & Agent Layer"
+    T["Agent Monitor<br/>agent/monitor.py<br/>Poll input/briefs/"]
+    U["Variant Counter<br/>Count *_final.png<br/>Flag if < 3 per aspect"]
+    V["Alert Generator<br/>Draft stakeholder email<br/>Console logs"]
+    W["State Tracker<br/>.processed.json<br/>mtime tracking"]
+  end
+
+  A --> D
+  B --> E
+  C --> L
+  D --> E
+  E --> F
+  F -->|Found| G
+  F -->|Missing| H
+  H --> I
+  I -->|Success| K
+  I -->|Fail| J
+  J --> K
+  G --> K
+  K --> L
+  L --> M
+  M --> N
+  N --> O
+  O --> P
+  O --> Q
+  O --> R
+  O --> S
+  
+  T -->|Poll| A
+  T -->|Trigger| D
+  T --> U
+  U --> V
+  U --> W
+  
+  style F fill:#fff4e1,stroke:#f90,stroke-width:2px
+  style H fill:#e1f5e1,stroke:#0a0,stroke-width:2px
+  style I fill:#fff4e1,stroke:#f90,stroke-width:2px
+  style M fill:#ffe1e1,stroke:#f00,stroke-width:2px
+  style T fill:#ffe1e1,stroke:#f00,stroke-width:2px
+  style S fill:#e1e1ff,stroke:#00f,stroke-width:2px

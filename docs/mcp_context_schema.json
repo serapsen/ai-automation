@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Agent MCP Context",
+  "type": "object",
+  "properties": {
+    "brief": {
+      "type": "object",
+      "properties": {
+        "products": { "type": "array", "items": { "type": "string" } },
+        "region": { "type": "string" },
+        "audience": { "type": "string" },
+        "message": { "type": "string" },
+        "aspect_ratios": { "type": "array", "items": { "type": "string" } },
+        "variant_target": { "type": "integer", "minimum": 1 },
+        "brand": {
+          "type": "object",
+          "properties": {
+            "colors": {
+              "type": "object",
+              "properties": {
+                "primary": { "type": "string", "description": "Hex color" },
+                "secondary": { "type": "string", "description": "Hex color" }
+              },
+              "additionalProperties": false
+            },
+            "logo_path": { "type": "string" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "required": ["products", "message"],
+      "additionalProperties": true
+    },
+    "status": {
+      "type": "object",
+      "description": "Counts and files per product and aspect",
+      "patternProperties": {
+        ".+": {
+          "type": "object",
+          "patternProperties": {
+            "^\\d+:\\d+$": {
+              "type": "object",
+              "properties": {
+                "count": { "type": "integer", "minimum": 0 },
+                "files": { "type": "array", "items": { "type": "string" } },
+                "compliance": {
+                  "type": "object",
+                  "properties": {
+                    "text_color": { "type": "string" },
+                    "logo_present": { "type": "boolean" },
+                    "checks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "rule": { "type": "string" },
+                          "passed": { "type": "boolean" }
+                        },
+                        "required": ["rule", "passed"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              },
+              "required": ["count"],
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "logs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": { "type": "string", "format": "date-time" },
+          "level": { "type": "string", "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] },
+          "message": { "type": "string" },
+          "context": { "type": "object" }
+        },
+        "required": ["level", "message"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "required": ["brief"],
+  "additionalProperties": true
+}

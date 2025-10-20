@@ -1,0 +1,75 @@
+%% Mermaid diagram: AI Agent System Design & Orchestration
+flowchart TB
+  subgraph "Agent Core Layer"
+    A["Agent Monitor<br/>agent/monitor.py<br/>process_once() or watch mode"]
+    B["State Manager<br/>.processed.json<br/>Track mtime per brief"]
+    C["Polling Loop<br/>Configurable interval<br/>Default: 10s"]
+  end
+
+  subgraph "Brief Processing Layer"
+    D["Scan Briefs<br/>input/briefs/*.yaml<br/>_list_briefs()"]
+    E{"New or<br/>Modified?"}
+    F["Load Brief<br/>load_brief()<br/>YAML/JSON to Dict"]
+    G["Extract Metadata<br/>Products: 2+<br/>Region, Audience<br/>Message, Aspects"]
+  end
+
+  subgraph "Pipeline Execution Layer"
+    H["Trigger Pipeline<br/>main.run_pipeline()<br/>Pass brief path"]
+    I["Asset Processing<br/>OpenAI Images API<br/>gpt-image-1/dall-e-3<br/>or Pillow fallback"]
+    J["Post-Processing<br/>Text overlay<br/>Logo overlay<br/>Compliance checks"]
+    K["Output Creation<br/>3 Aspect Ratios<br/>1x1, 9x16, 16x9<br/>Organized by product"]
+  end
+
+  subgraph "Monitoring & Analytics Layer"
+    L["Count Variants<br/>_count_outputs()<br/>Per product/aspect<br/>Only *_final.png"]
+    M{"Variants<br/>>= Target?"}
+    N["Success Log<br/>INFO level<br/>Pipeline complete"]
+    O["Alert Draft<br/>_compose_email()<br/>Variant shortfall detected"]
+  end
+
+  subgraph "LLM Context Protocol (MCP)"
+    P["Brief Context<br/>products: list<br/>region: str<br/>audience: str<br/>message: str"]
+    Q["Asset Status<br/>counts: dict<br/>files: list<br/>paths per aspect"]
+    R["Compliance Data<br/>text_color: hex<br/>logo_present: bool<br/>checks: list"]
+    S["System Logs<br/>errors: list<br/>warnings: list<br/>info: list"]
+  end
+
+  subgraph "Stakeholder Communication Layer"
+    T["Email Generator<br/>Format: Markdown<br/>Template-based"]
+    U["Recipients<br/>To: Creative Lead, AdOps"]
+    V["CC List<br/>IT, Legal/Compliance"]
+    W["Alert Content<br/>Variant counts<br/>Root cause analysis<br/>Next steps"]
+  end
+
+  A --> C
+  C --> D
+  D --> E
+  E -->|Yes| F
+  E -->|No| C
+  F --> G
+  G --> H
+  H --> I
+  I --> J
+  J --> K
+  K --> L
+  L --> M
+  M -->|Yes| N
+  M -->|No| O
+  O --> T
+  T --> U
+  T --> V
+  T --> W
+  N --> B
+  O --> B
+  
+  P -.->|Context| H
+  Q -.->|Data| L
+  R -.->|Checks| J
+  S -.->|Logs| O
+  
+  style A fill:#ffe1e1,stroke:#f00,stroke-width:2px
+  style E fill:#fff4e1,stroke:#f90,stroke-width:2px
+  style I fill:#e1f5e1,stroke:#0a0,stroke-width:2px
+  style M fill:#fff4e1,stroke:#f90,stroke-width:2px
+  style O fill:#ffe1e1,stroke:#f00,stroke-width:2px
+  style T fill:#e1e1ff,stroke:#00f,stroke-width:2px

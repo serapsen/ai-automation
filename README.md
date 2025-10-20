@@ -1,0 +1,133 @@
+# Creative Automation for Scalable Social Ad Campaigns
+
+A demo-ready local Python project that ingests campaign briefs, reuses or generates missing assets, overlays campaign messaging, and organizes outputs by product and aspect ratio. Includes an agentic monitor, diagrams, and documentation.
+
+## Features
+- **Pipeline**: Ingest brief (YAML/JSON), reuse local assets, generate missing creatives (OpenAI Image API or placeholder fallback), overlay campaign message, and save to `output/{product}/{aspect}/`.
+- **Aspect Ratios**: 1:1, 9:16, 16:9.
+- **Agent**: Monitors `input/briefs/`, triggers pipeline, tracks counts, flags <3 variants, drafts alert emails to console.
+- **Docs**: Mermaid architecture and agentic diagrams, 1-slide roadmap, stakeholder email sample.
+- **Config**: `.env` for keys, logging level, optional font path.
+
+## Project Structure
+```
+creative-automation-project/
+├── README.md
+├── requirements.txt
+├── main.py
+├── .env.example
+├── input/
+│   ├── briefs/
+│   │   └── sample_brief.yaml
+│   └── assets/
+├── output/
+├── src/
+│   ├── pipeline/
+│   │   ├── asset_ingestion.py
+│   │   ├── asset_generation.py
+│   │   └── post_processor.py
+│   └── utils/
+│       └── logger.py
+├── agent/
+│   └── monitor.py
+└── docs/
+    ├── architecture_diagram.mmd
+    ├── agentic_system_design.mmd
+    ├── roadmap.md
+    └── stakeholder_email.md
+```
+
+## Setup (Windows)
+1. Install Python 3.10+.
+2. Create venv and install deps:
+```
+py -3 -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
+```
+3. Create `.env` from `.env.example` and set `OPENAI_API_KEY` if using OpenAI image generation.
+
+## Run the Pipeline
+```
+python -m main --brief input/briefs/sample_brief.yaml
+```
+- Outputs to `output/{product}/{aspect}/`.
+- If `OPENAI_API_KEY` is not set, placeholder images are generated locally with Pillow.
+
+## Run the Agent Monitor
+- Run once:
+```
+python -m agent.monitor --once
+```
+- Watch folder (polling every 10s):
+```
+python -m agent.monitor --watch --interval 10
+```
+- Agent triggers the pipeline for each new brief and logs a draft email if assets per product/aspect are <3.
+
+## Example Output
+- Aspect folders on disk use `x` instead of `:` for cross-platform safety: `1x1`, `9x16`, `16x9`.
+- Example after running the sample brief:
+```
+output/
+  AlphaSneaker/
+    1x1/
+      gen_1.png
+      gen_1_msg.png
+      gen_1_final.png
+    9x16/
+      gen_1.png
+      gen_1_msg.png
+      gen_1_final.png
+    16x9/
+      gen_1.png
+      gen_1_msg.png
+      gen_1_final.png
+  BetaSandal/
+    1x1/ ...
+    9x16/ ...
+    16x9/ ...
+```
+- If reusing assets, expect names like `exist_1.png`, `exist_1_msg.png`, `exist_1_final.png`.
+
+## Environment
+- `.env` keys:
+  - `OPENAI_API_KEY` (optional)
+  - `OPENAI_IMAGE_MODEL=gpt-image-1` (optional)
+  - `LOG_LEVEL=INFO`
+  - `FONT_PATH` (optional, path to a .ttf font)
+
+## OpenAI Image Models
+- **Supported models for image generation**: `gpt-image-1`, `dall-e-3`.
+- If an unsupported model is set (e.g., `gpt-4o`), the app logs a warning and falls back to `gpt-image-1` automatically.
+- You can set the model via `.env` (`OPENAI_IMAGE_MODEL`) or per-brief (`openai_image_model`).
+
+## Key Design Decisions
+- **Local-first, cloud-ready**: Filesystem storage with optional extension to Dropbox/Azure/AWS.
+- **Model validation & fallback**: Unsupported image models automatically fall back to `gpt-image-1`.
+- **Graceful resilience**: Pillow placeholder images used if API is unavailable.
+- **Windows-safe paths**: Aspect directories use `1x1`, `9x16`, `16x9` on disk.
+- **Accurate variant counting**: Agent counts only `*_final.png` to avoid inflated counts.
+- **Compliance & moderation**: Simple brand color/logo checks and keyword moderation for demo purposes.
+
+## Diagrams
+- Mermaid files in `docs/`.
+- If your IDE cannot export diagrams, open `.mmd` files in https://mermaid.live or import to draw.io/Excalidraw to export PNG/SVG.
+
+## Example Brief
+See `input/briefs/sample_brief.yaml`.
+
+## Limitations
+- OpenAI image generation requires an API key and may incur costs.
+- Non-square images are derived by resizing/cropping from a base image.
+- Brand compliance checks are simplified (color usage and optional logo overlay).
+- Text moderation is a simple keyword blocker for demo purposes.
+
+## Troubleshooting
+- **No images generated**: Ensure `OPENAI_API_KEY` is set or expect Pillow placeholders.
+- **Logo not applied**: Verify `brand.logo_path` exists (e.g., `input/assets/brand/logo.png`).
+- **Fonts look off**: Set `FONT_PATH` to a valid `.ttf`.
+- **Model errors**: If using unsupported models (e.g., `gpt-4o` for Images API), the app falls back to `gpt-image-1` and logs a warning.
+
+## License
+MIT (for take-home demo purposes).
