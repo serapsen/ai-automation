@@ -42,7 +42,11 @@ def _placeholder_image(product: str, size: Tuple[int, int], primary_color: str |
         draw.line([(0, y), (w, y)], fill=(base[0]+shade if base[0]+shade <=255 else 255, base[1], base[2]))
     font = ImageFont.load_default()
     text = product
-    tw, th = draw.textsize(text, font=font)
+    try:
+        bbox = draw.textbbox((0, 0), text, font=font)
+        tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    except Exception:
+        tw, th = draw.textsize(text, font=font)
     draw.text(((w - tw) // 2, (h - th) // 2), text, fill=(255, 255, 255), font=font)
     return im
 

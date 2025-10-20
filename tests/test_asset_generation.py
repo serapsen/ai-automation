@@ -18,8 +18,8 @@ class TestAssetGeneration(unittest.TestCase):
             res = generate_image("Alpha", brief, "16:9", out_path)
             self.assertTrue(os.path.isfile(res))
             from PIL import Image
-            im = Image.open(res)
-            self.assertEqual(im.size, ASPECT_SIZES["16:9"])    
+            with Image.open(res) as im:
+                self.assertEqual(im.size, ASPECT_SIZES["16:9"])    
 
 
 if __name__ == "__main__":
