@@ -111,6 +111,15 @@ output/
   - `LOG_LEVEL=INFO`
   - `FONT_PATH` (optional, path to a .ttf font)
 
+## Logo usage
+- Set the logo file path in your brief at `brand.logo_path` (relative to repo root or absolute), e.g. `input/assets/brand/logo.png`.
+- Use a transparent PNG for best results.
+- The logo is auto-scaled to ~1/8 of image width and placed top-left with a margin (see `src/pipeline/post_processor.py` → `overlay_logo()`).
+- If the file is missing or invalid, the pipeline completes and saves images without a logo (no error).
+- To verify:
+  - Run `./.venv/Scripts/python.exe -m main --brief input/briefs/sample_brief.yaml`.
+  - Check `_final.png` files under `output/{product}/{aspect}/` — these include the logo overlay if present.
+
 ## OpenAI Image Models
 - **Supported models for image generation**: `gpt-image-1`, `dall-e-3`.
 - If an unsupported model is set (e.g., `gpt-4o`), the app logs a warning and falls back to `gpt-image-1` automatically.
