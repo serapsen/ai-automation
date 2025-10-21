@@ -1,0 +1,17 @@
+products:
+  - GammaRunner
+  - DeltaHiker
+region: APAC
+audience: Millennials
+overview: Social ads for Summer sale in APAC
+message: "Beat the Heat & Go Further with Lightweight Comfort"
+assets_root: input/assets
+output_root: output
+aspect_ratios: ["1:1", "9:16", "16:9"]
+variant_target: 3
+brand:
+  colors:
+    primary: "#0052FF"
+    secondary: "#111111"
+  logo_path: "input/assets/brand/logo.png"
+openai_image_model: gpt-image-1

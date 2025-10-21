@@ -52,7 +52,7 @@ class AzureBlobStorage:
                 return
             # simple check: list containers to validate auth
             _ = [c.name for c in self._client.list_containers(name_starts_with=self.container)][:1]
-            logger.info("Azure Blob enabled: container=%s prefix=%s", self.container, self.prefix or "/")
+            logger.info("Azure Blob enabled: container=%s the images are uploaded to the container", self.container) # removed prefix=%s self.prefix or "/" in the log - i dont use it
         except Exception as e:  # pragma: no cover
             logger.error("Azure Blob init failed: %s", e)
             self._client = None

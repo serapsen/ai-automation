@@ -65,6 +65,9 @@ python -m agent.monitor --watch --interval 10
 ```
 - Agent triggers the pipeline for each new brief and logs a draft email if assets per product/aspect are <3.
 
+### Agent LLM Context Schema
+- See `docs/mcp_context_schema.json` for the Model Context Protocol the agent would send to an LLM when drafting alerts.
+
 ## Run Tests
 Use Python's builtin unittest discovery. On Windows + Git Bash, using the venv's interpreter path is most reliable:
 ```
@@ -103,6 +106,7 @@ output/
     16x9/ ...
 ```
 - If reusing assets, expect names like `exist_1.png`, `exist_1_msg.png`, `exist_1_final.png`.
+- A run summary is written to `output/summary.json` with counts and compliance per product/aspect.
 
 ## Environment
 - `.env` keys:
@@ -112,6 +116,26 @@ output/
   - `FONT_PATH` (optional, path to a .ttf font)
   - `AZURE_STORAGE_CONNECTION_STRING` (preferred) or `AZURE_STORAGE_ACCOUNT`/`AZURE_STORAGE_KEY`
   - `AZURE_BLOB_CONTAINER` and optional `AZURE_BLOB_PREFIX`
+
+### Azure example (.env)
+```
+LOG_LEVEL=INFO
+
+# OpenAI (optional)
+OPENAI_API_KEY=
+OPENAI_IMAGE_MODEL=gpt-image-1
+
+# Azure Blob Storage
+# Preferred: single connection string
+AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net
+
+# Or account + key
+# AZURE_STORAGE_ACCOUNT=your_account
+# AZURE_STORAGE_KEY=your_key
+
+AZURE_BLOB_CONTAINER=ai-automation
+AZURE_BLOB_PREFIX=images
+```
 
 ## Logo usage
 - Set the logo file path in your brief at `brand.logo_path` (relative to repo root or absolute), e.g. `input/assets/brand/logo.png`.
@@ -153,6 +177,14 @@ See `input/briefs/sample_brief.yaml`.
 - **Logo not applied**: Verify `brand.logo_path` exists (e.g., `input/assets/brand/logo.png`).
 - **Fonts look off**: Set `FONT_PATH` to a valid `.ttf`.
 - **Model errors**: If using unsupported models (e.g., `gpt-4o` for Images API), the app falls back to `gpt-image-1` and logs a warning.
+
+## Demo Recording Checklist
+- **Prepare**: Ensure `.venv` is created, deps installed, and `.env` configured (Azure/OpenAI as desired).
+- **Show brief**: Open `input/briefs/sample_brief.yaml` (products, region, audience, message).
+- **Run pipeline**: `python -m main --brief input/briefs/sample_brief.yaml` from repo root.
+- **Outputs**: Show `output/{product}/{aspect}/*_final.png` and `output/summary.json`.
+- **Optional uploads**: Show Azure Blob container with uploaded files if configured.
+- **Agent**: Optionally run `python -m agent.monitor --once` and show logs.
 
 ## License
 MIT (for take-home demo purposes).

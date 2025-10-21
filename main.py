@@ -1,5 +1,6 @@
 import argparse
 import os
+import json
 import shutil
 from typing import Dict, List
 
@@ -81,6 +82,15 @@ def run_pipeline(brief_path: str) -> Dict:
             prod_summary[aspect] = {"count": len(used), "files": used, "compliance": comp}
             logger.info("%s | %s -> %d creatives", product, aspect, len(used))
         summary["products"][product] = prod_summary
+    # write a small insights artifact
+    try:
+        ensure_dir(output_root)
+        summary_path = os.path.join(output_root, "summary.json")
+        with open(summary_path, "w", encoding="utf-8") as f:
+            json.dump(summary, f, indent=2)
+        logger.info("wrote run summary -> %s", summary_path)
+    except Exception:
+        pass
 
     return summary
 
