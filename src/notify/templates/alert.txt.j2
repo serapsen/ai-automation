@@ -1,0 +1,24 @@
+Subject: {{ subject }}
+
+Hello Creative Lead and AdOps,
+
+The automation agent ran the creative pipeline for the latest brief and detected that some product/aspect combinations are below the target variant count.
+
+Brief: {{ brief_name }}
+Region: {{ region or '-' }}
+Audience: {{ audience or '-' }}
+Target per aspect: {{ variant_target }}
+
+{% if rows and rows|length -%}
+Below-target items:
+{% for r in rows -%}
+- {{ r.product }} | {{ r.aspect }}: {{ r.count }}/{{ variant_target }} variants{% if r.unique is not none %} (unique={{ r.unique }}){% endif %}
+{% endfor -%}
+{% else -%}
+All product/aspect combinations meet or exceed the target variant count.
+{% endif -%}
+
+Root causes may include API rate limits, missing input assets, or provisioning delays. The agent will retry on the next cycle.
+
+Best regards,
+Automation Agent

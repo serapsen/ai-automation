@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="x-ua-compatible" content="ie=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ subject }}</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; color: #111; }
+    h2 { color: {{ brand_primary or '#111' }}; margin: 0; display: inline-block; vertical-align: middle; }
+    .brand { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .meta { color: #555; font-size: 13px; margin-bottom: 8px; }
+    table { border-collapse: collapse; width: 100%; max-width: 720px; }
+    th, td { border: 1px solid #ddd; padding: 8px; font-size: 14px; }
+    th { background: {{ brand_primary or '#f3f4f6' }}22; color: #111; text-align: left; }
+    .small { font-size: 12px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="brand">
+    {% if brand_logo and brand_logo_cid %}
+      <img src="cid:{{ brand_logo_cid }}" alt="Brand Logo" style="max-height:48px;" />
+    {% endif %}
+    <h2>Creative Pipeline Update</h2>
+  </div>
+  <div class="meta">
+    Brief: <strong>{{ brief_name }}</strong>
+    &nbsp;|&nbsp; Region: <strong>{{ region or '-' }}</strong>
+    &nbsp;|&nbsp; Audience: <strong>{{ audience or '-' }}</strong>
+    &nbsp;|&nbsp; Target per aspect: <strong>{{ variant_target }}</strong>
+  </div>
+
+  <p>Hello Creative Lead and AdOps,</p>
+  <p>The automation agent detected some product/aspect combinations are below the target variant count.</p>
+
+  {% if rows and rows|length %}
+  <table role="table" aria-label="Variants below target">
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Aspect</th>
+        <th>Variants</th>
+        <th>Unique</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r.product }}</td>
+        <td>{{ r.aspect }}</td>
+        <td>{{ r.count }}/{{ variant_target }}</td>
+        <td>{{ r.unique if r.unique is not none else '-' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>All product/aspect combinations meet or exceed the target variant count.</p>
+  {% endif %}
+
+  <p class="small">Root causes may include API rate limits, missing input assets, or provisioning delays. The agent will retry on the next cycle.</p>
+  <p>Best regards,<br/>Automation Agent</p>
+</body>
+</html>

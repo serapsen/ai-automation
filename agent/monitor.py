@@ -2,13 +2,14 @@ import argparse
 import json
 import os
 import time
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from dotenv import load_dotenv
 
 from src.utils.logger import get_logger
 from src.pipeline.asset_ingestion import load_brief, aspect_to_dir
 from main import run_pipeline
+from src.notify.emailer import send_email, render_email_template
 
 logger = get_logger("agent.monitor")
 
@@ -46,31 +47,47 @@ def _count_outputs(output_root: str, product: str, aspect: str) -> int:
     return len([fn for fn in os.listdir(d) if fn.lower().endswith("_final.png")])
 
 
-def _compose_email(brief_path: str, summary: Dict, variant_target: int) -> str:
+def _compose_email(brief_path: str, summary: Dict, variant_target: int) -> Tuple[str, str, str]:
     brief = load_brief(brief_path)
     products = brief.get("products", [])
     output_root = brief.get("output_root", "output")
-    lines = []
-    lines.append("Subject: Creative Pipeline Update – Variants Below Target")
-    lines.append("")
-    lines.append("To: Creative Lead; AdOps")
-    lines.append("Cc: IT; Legal/Compliance")
-    lines.append("")
-    lines.append("Hello Creative Lead and AdOps,")
-    lines.append("")
-    lines.append("The automation agent ran the creative pipeline for the latest brief and detected that some product/aspect combinations are below the target variant count.")
-    lines.append("")
+    name = os.path.basename(brief_path)
+    region = brief.get("region")
+    audience = brief.get("audience")
+    brand = brief.get("brand", {}) or {}
+    colors = brand.get("colors", {}) or {}
+    brand_primary = colors.get("primary")
+    brand_logo_path = (brand.get("logo_path") or "").strip() or None
+    subject = f"Creative Pipeline Update – {name} (region={region or '-'}, audience={audience or '-'})"
+    rows = []
     for p in products:
         for a in summary.get("aspects", []):
-            cnt = _count_outputs(output_root, p, a)
+            cnt = None
+            uniq = None
+            try:
+                cnt = ((summary or {}).get("products", {}).get(p, {}).get(a, {}) or {}).get("count")
+                uniq = ((summary or {}).get("products", {}).get(p, {}).get(a, {}).get("unique", {}) or {}).get("count")
+            except Exception:
+                cnt = None
+                uniq = None
+            if cnt is None:
+                cnt = _count_outputs(output_root, p, a)
             if cnt < variant_target:
-                lines.append(f"- {p} | {a}: {cnt}/{variant_target} variants available")
-    lines.append("")
-    lines.append("Root causes may include API rate limits, missing input assets, or provisioning delays. The agent will retry on the next cycle.")
-    lines.append("")
-    lines.append("Best regards,")
-    lines.append("Automation Agent")
-    return "\n".join(lines)
+                rows.append({"product": p, "aspect": a, "count": cnt, "unique": uniq})
+    context = {
+        "subject": subject,
+        "brief_name": name,
+        "region": region,
+        "audience": audience,
+        "variant_target": variant_target,
+        "rows": rows,
+        "brand_primary": brand_primary,
+        "brand_logo": bool(brand_logo_path),
+        "brand_logo_cid": "brandlogo" if brand_logo_path and os.path.isfile(brand_logo_path) else None,
+    }
+    text = render_email_template("alert.txt.j2", context) or ""
+    html = render_email_template("alert.html.j2", context) or ""
+    return subject, text, html
 
 
 def process_once(briefs_dir: str, variant_target: int) -> int:
@@ -84,9 +101,41 @@ def process_once(briefs_dir: str, variant_target: int) -> int:
         logger.info("processing brief -> %s", path)
         try:
             res = run_pipeline(path)
-            email = _compose_email(path, res, variant_target)
-            for line in email.splitlines():
+            subject, body, html = _compose_email(path, res, variant_target)
+            for line in (body or "").splitlines():
                 logger.info(line)
+            brief = load_brief(path)
+            output_root = brief.get("output_root", "output")
+            attachments = []
+            json_p = os.path.join(output_root, "summary.json")
+            csv_p = os.path.join(output_root, "summary.csv")
+            if os.path.isfile(json_p):
+                attachments.append({"path": json_p})
+            if os.path.isfile(csv_p):
+                attachments.append({"path": csv_p})
+            brand = brief.get("brand", {}) or {}
+            logo_path = (brand.get("logo_path") or "").strip() or None
+            if logo_path and os.path.isfile(logo_path):
+                attachments.append({"path": logo_path, "cid": "brandlogo"})
+
+            def _as_list(v):
+                if not v:
+                    return []
+                if isinstance(v, list):
+                    return [str(x).strip() for x in v if str(x).strip()]
+                return [s.strip() for s in str(v).split(",") if s.strip()]
+
+            notif = brief.get("notifications", {}) or {}
+            to_addrs = _as_list(notif.get("to"))
+            cc_addrs = _as_list(notif.get("cc"))
+            by_region = brief.get("notifications_by_region", {}) or {}
+            if region := brief.get("region"):
+                extra = by_region.get(region)
+                if extra:
+                    to_addrs = to_addrs or _as_list(extra.get("to"))
+                    cc_addrs = cc_addrs or _as_list(extra.get("cc"))
+
+            send_email(subject=subject, body_text=body, body_html=html, attachments=attachments, to_addrs=to_addrs or None, cc_addrs=cc_addrs or None)
             st[path] = mtime
             processed += 1
         except Exception as e:

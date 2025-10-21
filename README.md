@@ -137,6 +137,11 @@ AZURE_BLOB_CONTAINER=ai-automation
 AZURE_BLOB_PREFIX=images
 ```
 
+### Storage backend selection
+- Control uploads via `STORAGE_BACKEND` env (defaults to `azure`):
+  - `STORAGE_BACKEND=azure` to enable Azure Blob uploads
+  - `STORAGE_BACKEND=none` to disable cloud uploads
+
 ## Logo usage
 - Set the logo file path in your brief at `brand.logo_path` (relative to repo root or absolute), e.g. `input/assets/brand/logo.png`.
 - Use a transparent PNG for best results.

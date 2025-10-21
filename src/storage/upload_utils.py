@@ -4,7 +4,7 @@ from typing import Iterator
 
 from dotenv import load_dotenv
 
-from src.storage.azure_storage import AzureBlobStorage
+from src.storage.base import get_storage
 from src.utils.logger import get_logger
 
 logger = get_logger("upload_utils")
@@ -29,7 +29,7 @@ def main():
     if not os.path.isdir(local_root):
         raise SystemExit(f"Local directory not found: {local_root}")
 
-    dbx = AzureBlobStorage()
+    dbx = get_storage()
     if not dbx.enabled():
         raise SystemExit("Azure Blob not enabled — set AZURE credentials in .env and install requirements")
 

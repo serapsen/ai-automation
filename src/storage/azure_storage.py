@@ -80,9 +80,15 @@ class AzureBlobStorage:
                 container_client.create_container()
             except Exception:
                 pass
+            blob_client = container_client.get_blob_client(blob=blob_name)
             with open(local_path, "rb") as data:
-                container_client.upload_blob(name=blob_name, data=data, overwrite=True)
-            logger.info("uploaded to azure blob -> %s/%s", self.container, blob_name)
+                blob_client.upload_blob(data=data, overwrite=True)
+            try:
+                props = blob_client.get_blob_properties()
+                etag = getattr(props, "etag", None)
+                logger.info("uploaded to azure blob -> %s/%s etag=%s", self.container, blob_name, etag)
+            except Exception:
+                logger.info("uploaded to azure blob -> %s/%s", self.container, blob_name)
             return True
         except Exception as e:  # pragma: no cover
             logger.error("Azure Blob upload failed for %s: %s", local_path, e)
