@@ -15,3 +15,10 @@ brand:
     secondary: "#111111"
   logo_path: "input/assets/brand/logo.png"
 openai_image_model: gpt-image-1
+notifications:
+  to: ["sen.serap@outlook.com", "sen.serapp@gmail.com"]
+  cc: "sen.serap@outlook.com,sen.serapp@gmail.com"
+notifications_by_region:
+  EMEA:
+    to: "sen.serap@outlook.com"
+    cc: ["sen.serapp@gmail.com"]

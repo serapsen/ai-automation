@@ -57,6 +57,7 @@ def _compose_email(brief_path: str, summary: Dict, variant_target: int) -> Tuple
     brand = brief.get("brand", {}) or {}
     colors = brand.get("colors", {}) or {}
     brand_primary = colors.get("primary")
+    brand_secondary = colors.get("secondary")
     brand_logo_path = (brand.get("logo_path") or "").strip() or None
     subject = f"Creative Pipeline Update – {name} (region={region or '-'}, audience={audience or '-'})"
     rows = []
@@ -82,8 +83,10 @@ def _compose_email(brief_path: str, summary: Dict, variant_target: int) -> Tuple
         "variant_target": variant_target,
         "rows": rows,
         "brand_primary": brand_primary,
+        "brand_secondary": brand_secondary,
         "brand_logo": bool(brand_logo_path),
         "brand_logo_cid": "brandlogo" if brand_logo_path and os.path.isfile(brand_logo_path) else None,
+        "output_root": output_root,
     }
     text = render_email_template("alert.txt.j2", context) or ""
     html = render_email_template("alert.html.j2", context) or ""
@@ -109,10 +112,12 @@ def process_once(briefs_dir: str, variant_target: int) -> int:
             attachments = []
             json_p = os.path.join(output_root, "summary.json")
             csv_p = os.path.join(output_root, "summary.csv")
-            if os.path.isfile(json_p):
-                attachments.append({"path": json_p})
-            if os.path.isfile(csv_p):
-                attachments.append({"path": csv_p})
+            attach_toggle = (os.getenv("EMAIL_ATTACH_SUMMARY", "true").lower() in ("1", "true", "yes"))
+            if attach_toggle:
+                if os.path.isfile(json_p):
+                    attachments.append({"path": json_p})
+                if os.path.isfile(csv_p):
+                    attachments.append({"path": csv_p})
             brand = brief.get("brand", {}) or {}
             logo_path = (brand.get("logo_path") or "").strip() or None
             if logo_path and os.path.isfile(logo_path):

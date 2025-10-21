@@ -142,6 +142,29 @@ AZURE_BLOB_PREFIX=images
   - `STORAGE_BACKEND=azure` to enable Azure Blob uploads
   - `STORAGE_BACKEND=none` to disable cloud uploads
 
+### Email (SMTP) – Office 365 / Outlook
+- Minimal `.env` example:
+```
+SMTP_HOST=smtp.office365.com
+SMTP_PORT=587
+SMTP_USER=your.name@yourtenant.onmicrosoft.com
+SMTP_PASS=your_app_or_smtp_password
+SMTP_FROM=your.name@yourtenant.onmicrosoft.com
+SMTP_STARTTLS=true
+
+# Optional global fallback recipients; briefs can override via `notifications`.
+SMTP_TO=creative.lead@yourco.com,adops@yourco.com
+SMTP_CC=it@yourco.com,legal@yourco.com
+
+# Attach run summaries (JSON/CSV) to emails
+EMAIL_ATTACH_SUMMARY=true
+```
+- Notes:
+  - Ensure the mailbox has SMTP AUTH enabled in Exchange Online.
+  - `SMTP_FROM` should match the authenticated mailbox (`SMTP_USER`) unless send-as is allowed.
+  - STARTTLS on port 587 is required; implicit TLS (465) is not used for Office 365.
+  - If briefs define `notifications` or `notifications_by_region`, those recipients take precedence over `SMTP_TO`/`SMTP_CC`.
+
 ## Logo usage
 - Set the logo file path in your brief at `brand.logo_path` (relative to repo root or absolute), e.g. `input/assets/brand/logo.png`.
 - Use a transparent PNG for best results.

@@ -30,7 +30,8 @@ class AzureBlobStorage:
         self.account: Optional[str] = os.getenv("AZURE_STORAGE_ACCOUNT")
         self.key: Optional[str] = os.getenv("AZURE_STORAGE_KEY")
         self.container: Optional[str] = os.getenv("AZURE_BLOB_CONTAINER")
-        self.prefix: str = (os.getenv("AZURE_BLOB_PREFIX") or "").strip().strip("/")
+        _pref_raw = (os.getenv("AZURE_BLOB_PREFIX") or "").strip().strip("/\\")
+        self.prefix: str = _pref_raw.replace("\\", "/")
         self._client: Optional[BlobServiceClient] = None
 
         if BlobServiceClient is None:

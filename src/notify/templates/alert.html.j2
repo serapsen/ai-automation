@@ -11,9 +11,11 @@
     .brand { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
     .meta { color: #555; font-size: 13px; margin-bottom: 8px; }
     table { border-collapse: collapse; width: 100%; max-width: 720px; }
-    th, td { border: 1px solid #ddd; padding: 8px; font-size: 14px; }
+    th, td { border: 1px solid {{ brand_secondary or '#ddd' }}; padding: 8px; font-size: 14px; }
     th { background: {{ brand_primary or '#f3f4f6' }}22; color: #111; text-align: left; }
     .small { font-size: 12px; color: #666; }
+    .btn { display:inline-block; background: {{ brand_primary or '#111' }}; color:#fff !important; padding:8px 12px; text-decoration:none; border-radius:6px; }
+    .hr { height:1px; background: {{ brand_secondary or '#e5e7eb' }}; border:0; margin:16px 0; }
   </style>
 </head>
 <body>
@@ -32,6 +34,10 @@
 
   <p>Hello Creative Lead and AdOps,</p>
   <p>The automation agent detected some product/aspect combinations are below the target variant count.</p>
+
+  <p>
+    <a class="btn" href="file:///{{ (output_root or '') | replace('\\', '/') }}" target="_blank" rel="noopener">View Outputs</a>
+  </p>
 
   {% if rows and rows|length %}
   <table role="table" aria-label="Variants below target">
@@ -57,6 +63,13 @@
   {% else %}
   <p>All product/aspect combinations meet or exceed the target variant count.</p>
   {% endif %}
+
+  <hr class="hr" />
+  <p class="small">
+    This message may contain confidential information intended for the recipient stakeholders.
+    Creative assets should comply with brand guidelines and local regulations. If you believe this
+    message was sent in error, please notify the sender and delete it.
+  </p>
 
   <p class="small">Root causes may include API rate limits, missing input assets, or provisioning delays. The agent will retry on the next cycle.</p>
   <p>Best regards,<br/>Automation Agent</p>
