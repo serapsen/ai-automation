@@ -9,6 +9,7 @@ from src.utils.logger import get_logger
 from src.pipeline.asset_ingestion import load_brief, get_assets_root, list_existing_assets, get_aspect_list, aspect_to_dir
 from src.pipeline.asset_generation import generate_image, ASPECT_SIZES
 from src.pipeline.post_processor import ensure_dir, overlay_text, overlay_logo, moderate_text, brand_compliance_summary
+from src.storage.azure_storage import AzureBlobStorage
 
 logger = get_logger("main")
 
@@ -20,6 +21,7 @@ def _copy(src: str, dst: str):
 
 def run_pipeline(brief_path: str) -> Dict:
     load_dotenv()
+    dbx = AzureBlobStorage()
     brief = load_brief(brief_path)
 
     products: List[str] = brief.get("products") or []
@@ -58,6 +60,10 @@ def run_pipeline(brief_path: str) -> Dict:
                     with_logo = os.path.join(out_dir, f"exist_{i+1}_final.png")
                     overlay_logo(over, logo_path, with_logo)
                     used.append(with_logo)
+                    # optional Dropbox upload for final asset
+                    if dbx.enabled():
+                        rel = os.path.join(product, aspect_to_dir(aspect), os.path.basename(with_logo))
+                        dbx.upload(with_logo, rel)
             else:
                 gen_path = os.path.join(out_dir, f"gen_1.png")
                 generate_image(product, brief, aspect, gen_path)
@@ -66,6 +72,10 @@ def run_pipeline(brief_path: str) -> Dict:
                 with_logo = os.path.join(out_dir, f"gen_1_final.png")
                 overlay_logo(over, logo_path, with_logo)
                 used.append(with_logo)
+                # optional Dropbox upload for generated final asset
+                if dbx.enabled():
+                    rel = os.path.join(product, aspect_to_dir(aspect), os.path.basename(with_logo))
+                    dbx.upload(with_logo, rel)
 
             comp = brand_compliance_summary(brand_color, os.path.isfile(logo_path) if logo_path else False)
             prod_summary[aspect] = {"count": len(used), "files": used, "compliance": comp}

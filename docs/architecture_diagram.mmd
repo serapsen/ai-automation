@@ -34,6 +34,10 @@ flowchart TB
     S["Naming Convention<br/>exist_N_final.png<br/>gen_N_final.png"]
   end
 
+  subgraph "Cloud Storage"
+    X["Cloud Storage (Azure Blob)<br/>Uploads of *_final.png<br/>container/prefix/{product}/{aspect}/"]
+  end
+
   subgraph "Monitoring & Agent Layer"
     T["Agent Monitor<br/>agent/monitor.py<br/>Poll input/briefs/"]
     U["Variant Counter<br/>Count *_final.png<br/>Flag if < 3 per aspect"]
@@ -61,6 +65,7 @@ flowchart TB
   O --> Q
   O --> R
   O --> S
+  O --> X
   
   T -->|Poll| A
   T -->|Trigger| D
@@ -74,3 +79,4 @@ flowchart TB
   style M fill:#ffe1e1,stroke:#f00,stroke-width:2px
   style T fill:#ffe1e1,stroke:#f00,stroke-width:2px
   style S fill:#e1e1ff,stroke:#00f,stroke-width:2px
+  style X fill:#e1eaff,stroke:#00f,stroke-width:2px

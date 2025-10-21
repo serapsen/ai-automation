@@ -110,6 +110,8 @@ output/
   - `OPENAI_IMAGE_MODEL=gpt-image-1` (optional)
   - `LOG_LEVEL=INFO`
   - `FONT_PATH` (optional, path to a .ttf font)
+  - `AZURE_STORAGE_CONNECTION_STRING` (preferred) or `AZURE_STORAGE_ACCOUNT`/`AZURE_STORAGE_KEY`
+  - `AZURE_BLOB_CONTAINER` and optional `AZURE_BLOB_PREFIX`
 
 ## Logo usage
 - Set the logo file path in your brief at `brand.logo_path` (relative to repo root or absolute), e.g. `input/assets/brand/logo.png`.
@@ -126,7 +128,7 @@ output/
 - You can set the model via `.env` (`OPENAI_IMAGE_MODEL`) or per-brief (`openai_image_model`).
 
 ## Key Design Decisions
-- **Local-first, cloud-ready**: Filesystem storage with optional extension to Dropbox/Azure/AWS.
+- **Local-first, cloud-ready**: Filesystem storage with optional extension to Azure Blob (easily adaptable to other clouds).
 - **Model validation & fallback**: Unsupported image models automatically fall back to `gpt-image-1`.
 - **Graceful resilience**: Pillow placeholder images used if API is unavailable.
 - **Windows-safe paths**: Aspect directories use `1x1`, `9x16`, `16x9` on disk.

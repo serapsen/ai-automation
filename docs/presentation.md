@@ -17,7 +17,7 @@
 ## Task 1 – Architecture & Roadmap
 - **Architecture**: [architecture_diagram.mmd](architecture_diagram.mmd) – refined with layers and modern AI models
 - **Data Flow**: [data_flow_diagram.mmd](data_flow_diagram.mmd) – transformations and metadata tracking
-- **Storage**: Local `input/assets/` (extensible to Dropbox/Azure/AWS)
+- **Storage**: Local `input/assets/` with optional Azure Blob uploads
 - **GenAI**: OpenAI DALL-E 3 API with Pillow fallback for resilience
 - **Outputs**: Structured `output/{product}/{aspect}/` with naming conventions
 - **Compliance**: Automated brand color and logo presence checks
@@ -70,7 +70,7 @@
 - No real email or BI integration (console logs for demo).
 
 ## Next Steps
-- Add Dropbox/Azure blob integration for `assets_root` and outputs.
+ - Enhance Azure Blob integration for `assets_root` and outputs.
 - Email integration (SMTP/Outlook) and notifications.
 - Scalable variant generation loop and A/B tracking metadata.
 - Compliance DSL (brand palettes, logo placement rules, legal strings).
