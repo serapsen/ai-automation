@@ -11,30 +11,47 @@ A demo-ready local Python project that ingests campaign briefs, reuses or genera
 
 ## Project Structure
 ```
-creative-automation-project/
+ai-automation/
 ├── README.md
 ├── requirements.txt
 ├── main.py
 ├── .env.example
+├── agent/
+│   ├── __init__.py
+│   └── monitor.py
+├── src/
+│   ├── utils/
+│   │   ├── logger.py
+│   │   └── hash.py
+│   ├── pipeline/
+│   │   ├── asset_ingestion.py
+│   │   ├── asset_generation.py
+│   │   ├── post_processor.py
+│   │   └── brief.py
+│   ├── reporting/
+│   │   └── summary.py
+│   ├── notify/
+│   │   ├── emailer.py
+│   │   └── templates/
+│   └── storage/
+│       ├── base.py
+│       ├── azure_storage.py
+│       └── upload_utils.py
 ├── input/
 │   ├── briefs/
 │   │   └── sample_brief.yaml
 │   └── assets/
 ├── output/
-├── src/
-│   ├── pipeline/
-│   │   ├── asset_ingestion.py
-│   │   ├── asset_generation.py
-│   │   └── post_processor.py
-│   └── utils/
-│       └── logger.py
-├── agent/
-│   └── monitor.py
-└── docs/
-    ├── architecture_diagram.mmd
-    ├── agentic_system_design.mmd
-    ├── roadmap.md
-    └── stakeholder_email.md
+├── docs/
+│   ├── architecture_diagram.mmd
+│   ├── agentic_system_design.mmd
+│   ├── data_flow_diagram.mmd
+│   ├── mcp_context_schema.json
+│   ├── presentation.md
+│   ├── roadmap.md
+│   └── stakeholder_email.md
+└── tests/
+    └── test_*.py
 ```
 
 ## Setup (Windows)
