@@ -1,4 +1,10 @@
 {
-  "input\\briefs\\sample_brief.yaml": 1761056459.7907307,
-  "input\\briefs\\sample_brief_apac.yaml": 1761056467.3888378
+  "input\\briefs\\sample_brief.yaml": {
+    "mtime": 1761056459.7907307,
+    "sha1": "cd128e1b5da3a7cf1faeb10783bb0a0f1d824f9c"
+  },
+  "input\\briefs\\sample_brief_apac.yaml": {
+    "mtime": 1761056467.3888378,
+    "sha1": "0ab570cfbd15442b3729b5b785d00afd6a180049"
+  }
 }
