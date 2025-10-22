@@ -1,7 +1,7 @@
 %% Mermaid diagram: AI Agent System Design & Orchestration
 flowchart TB
   subgraph "Agent Core Layer"
-    A["Agent Monitor<br/>agent/monitor.py<br/>process_once() or watch mode"]
+    A["Agent Monitor<br/>agent/monitor.py<br/>process_once() / watch<br/>Supports --force"]
     B["State Manager<br/>.processed.json<br/>Track mtime per brief"]
     C["Polling Loop<br/>Configurable interval<br/>Default: 10s"]
   end
@@ -35,7 +35,7 @@ flowchart TB
   end
 
   subgraph "Stakeholder Communication Layer"
-    T["Email Generator<br/>Format: Markdown<br/>Template-based"]
+    T["Email Generator<br/>SMTP (if configured)<br/>or console draft"]
     U["Recipients<br/>To: Creative Lead, AdOps"]
     V["CC List<br/>IT, Legal/Compliance"]
     W["Alert Content<br/>Variant counts<br/>Root cause analysis<br/>Next steps"]

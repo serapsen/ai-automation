@@ -39,9 +39,9 @@ flowchart TB
   end
 
   subgraph "Monitoring & Agent Layer"
-    T["Agent Monitor<br/>agent/monitor.py<br/>Poll input/briefs/"]
+    T["Agent Monitor<br/>agent/monitor.py<br/>Poll input/briefs/<br/>Supports --force"]
     U["Variant Counter<br/>Count *_final.png<br/>Flag if < 3 per aspect"]
-    V["Alert Generator<br/>Draft stakeholder email<br/>Console logs"]
+    V["Alert Generator<br/>SMTP email (if configured)<br/>or Console logs"]
     W["State Tracker<br/>.processed.json<br/>mtime tracking"]
   end
 

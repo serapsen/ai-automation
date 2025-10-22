@@ -5,7 +5,7 @@ A demo-ready local Python project that ingests campaign briefs, reuses or genera
 ## Features
 - **Pipeline**: Ingest brief (YAML/JSON), reuse local assets, generate missing creatives (OpenAI Image API or placeholder fallback), overlay campaign message, and save to `output/{product}/{aspect}/`.
 - **Aspect Ratios**: 1:1, 9:16, 16:9.
-- **Agent**: Monitors `input/briefs/`, triggers pipeline, tracks counts, flags <3 variants, drafts alert emails to console.
+- **Agent**: Monitors `input/briefs/`, triggers pipeline, tracks counts, flags <3 variants, sends SMTP email if configured (or logs a draft).
 - **Docs**: Mermaid architecture and agentic diagrams, 1-slide roadmap, stakeholder email sample.
 - **Config**: `.env` for keys, logging level, optional font path.
 
@@ -39,7 +39,8 @@ ai-automation/
 │       └── upload_utils.py
 ├── input/
 │   ├── briefs/
-│   │   └── sample_brief.yaml
+│   │   ├── sample_brief.yaml
+│   │   └── sample_brief_apac.yaml
 │   └── assets/
 ├── output/
 ├── docs/
@@ -62,7 +63,7 @@ py -3 -m venv .venv
 .\.venv\Scripts\activate
 pip install -r requirements.txt
 ```
-3. Create `.env` from `.env.example` and set `OPENAI_API_KEY` if using OpenAI image generation.
+3. Create `.env` from `.env.example` (or `ENV.EXAMPLE.txt`) and set `OPENAI_API_KEY` (optional) and SMTP variables (`SMTP_*`) if you want email sending.
 
 ## Run the Pipeline
 ```
@@ -80,7 +81,15 @@ python -m agent.monitor --once
 ```
 python -m agent.monitor --watch --interval 10
 ```
-- Agent triggers the pipeline for each new brief and logs a draft email if assets per product/aspect are <3.
+- Agent triggers the pipeline for each new brief and sends an SMTP email if configured (or logs a draft) when assets per product/aspect are <3.
+- Force reprocess (ignore processed state):
+```
+python -m agent.monitor --once --force
+python -m agent.monitor --watch --interval 10 --force
+```
+- Notes:
+  - The agent stores processed modification times in `agent/.processed.json`.
+  - If nothing changed, it logs `no new briefs to process` and exits.
 
 ### Agent LLM Context Schema
 - See `docs/mcp_context_schema.json` for the Model Context Protocol the agent would send to an LLM when drafting alerts.
@@ -133,6 +142,7 @@ output/
   - `FONT_PATH` (optional, path to a .ttf font)
   - `AZURE_STORAGE_CONNECTION_STRING` (preferred) or `AZURE_STORAGE_ACCOUNT`/`AZURE_STORAGE_KEY`
   - `AZURE_BLOB_CONTAINER` and optional `AZURE_BLOB_PREFIX`
+  - `SMTP_*` keys for email (see Email sections below)
 
 ### Azure example (.env)
 ```
@@ -181,6 +191,29 @@ EMAIL_ATTACH_SUMMARY=true
   - `SMTP_FROM` should match the authenticated mailbox (`SMTP_USER`) unless send-as is allowed.
   - STARTTLS on port 587 is required; implicit TLS (465) is not used for Office 365.
   - If briefs define `notifications` or `notifications_by_region`, those recipients take precedence over `SMTP_TO`/`SMTP_CC`.
+
+### Email (SMTP) – SendGrid
+- Minimal `.env` example (implicit TLS on 465):
+```
+SMTP_HOST=smtp.sendgrid.net
+SMTP_PORT=465
+SMTP_SSL=true
+SMTP_STARTTLS=false
+SMTP_USER=apikey
+SMTP_PASS=YOUR_SENDGRID_API_KEY
+SMTP_FROM=verified@yourdomain.com
+
+# Optional global fallback recipients; briefs can override via `notifications`.
+SMTP_TO=recipient@yourco.com
+SMTP_CC=
+
+EMAIL_ATTACH_SUMMARY=true
+```
+- Notes:
+  - Use port 465 with implicit TLS (`SMTP_SSL=true`).
+  - Alternatively, port 587 with STARTTLS (`SMTP_STARTTLS=true`, `SMTP_SSL=false`).
+  - `SMTP_FROM` must be a verified sender (Single Sender or Domain Auth) in SendGrid.
+  - `SMTP_PORT` is required; there is no default.
 
 ## Logo usage
 - Set the logo file path in your brief at `brand.logo_path` (relative to repo root or absolute), e.g. `input/assets/brand/logo.png`.

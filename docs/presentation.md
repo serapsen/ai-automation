@@ -18,7 +18,7 @@
 - **Architecture**: [architecture_diagram.mmd](architecture_diagram.mmd) – refined with layers and modern AI models
 - **Data Flow**: [data_flow_diagram.mmd](data_flow_diagram.mmd) – transformations and metadata tracking
 - **Storage**: Local `input/assets/` with optional Azure Blob uploads
-- **GenAI**: OpenAI DALL-E 3 API with Pillow fallback for resilience
+- **GenAI**: OpenAI Images API (gpt-image-1 or dall-e-3) with Pillow fallback for resilience
 - **Outputs**: Structured `output/{product}/{aspect}/` with naming conventions
 - **Compliance**: Automated brand color and logo presence checks
 
@@ -40,7 +40,7 @@
 
 ### Demo Steps (Local)
 1. Install dependencies: `pip install -r requirements.txt`
-2. Configure environment: Copy [`.env.example`](../.env.example) to `.env` and set `OPENAI_API_KEY` (optional).
+2. Configure environment: Copy [`.env.example`](../.env.example) (or `ENV.EXAMPLE.txt`) to `.env` and set `OPENAI_API_KEY` (optional) and `SMTP_*` variables if you want email sending.
 3. Run pipeline: `python -m main --brief input/briefs/sample_brief.yaml`
    - See [sample_brief.yaml](../input/briefs/sample_brief.yaml) for structure.
 4. Inspect outputs in `output/AlphaSneaker/*` and `output/BetaSandal/*`.
@@ -67,10 +67,10 @@
 ## Limitations
 - Placeholder images lack photorealism; relies on external GenAI for quality.
 - No persistence layer beyond filesystem.
-- No real email or BI integration (console logs for demo).
+- SMTP email is supported when configured; no BI integration.
 
 ## Next Steps
  - Enhance Azure Blob integration for `assets_root` and outputs.
-- Email integration (SMTP/Outlook) and notifications.
+- Harden SMTP deliverability (domain auth, suppression management), multi-provider presets (SendGrid/Office365), and monitoring.
 - Scalable variant generation loop and A/B tracking metadata.
 - Compliance DSL (brand palettes, logo placement rules, legal strings).
