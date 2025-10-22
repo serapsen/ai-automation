@@ -39,17 +39,58 @@
 - Message overlay and optional logo overlay.
 
 ### Demo Steps (Local)
-1. Install dependencies: `pip install -r requirements.txt`
-2. Configure environment: Copy [`.env.example`](../.env.example) (or `ENV.EXAMPLE.txt`) to `.env` and set `OPENAI_API_KEY` (optional) and `SMTP_*` variables if you want email sending.
-3. Run pipeline: `python -m main --brief input/briefs/sample_brief.yaml`
+1. Create venv and install dependencies (Windows):
+   ```
+   py -3 -m venv .venv
+   .\.venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+2. Configure environment:
+   - Copy [`.env.example`](../.env.example) (or `ENV.EXAMPLE.txt`) to `.env`.
+   - If you don't want cloud uploads in the demo:
+     ```
+     STORAGE_BACKEND=none
+     ```
+   - Optional GenAI (for real image generation; else Pillow placeholders):
+     ```
+     OPENAI_API_KEY=...
+     OPENAI_IMAGE_MODEL=gpt-image-1
+     ```
+   - Optional SMTP email (SendGrid implicit TLS 465 example):
+     ```
+     SMTP_HOST=smtp.sendgrid.net
+     SMTP_PORT=465
+     SMTP_SSL=true
+     SMTP_STARTTLS=false
+     SMTP_USER=apikey
+     SMTP_PASS=YOUR_SENDGRID_API_KEY
+     SMTP_FROM=verified@yourdomain.com
+     SMTP_TO=you@yourdomain.com
+     ```
+
+3. Run the pipeline for the sample brief:
+   ```
+   python -m main --brief input/briefs/sample_brief.yaml
+   ```
    - See [sample_brief.yaml](../input/briefs/sample_brief.yaml) for structure.
-4. Inspect outputs in `output/AlphaSneaker/*` and `output/BetaSandal/*`.
+
+4. Optional: Run a second brief to show APAC variant:
+   ```
+   python -m main --brief input/briefs/sample_brief_apac.yaml
+   ```
+
+5. Run the Agent Monitor (alerts and email):
+   ```
+   python -m agent.monitor --once --force
+   ```
+   - Counts variants per product/aspect and either sends SMTP email (if configured) or logs a draft to console.
 
 ## Task 3 – Agentic System & Comms
 - **System Design**: [agentic_system_design.mmd](agentic_system_design.mmd) – enhanced with detailed orchestration flow
 - **Agent Monitor**: [`agent/monitor.py`](../agent/monitor.py) with intelligent polling and state management
 - **Variant Tracking**: Automated counting with configurable thresholds (default: 3)
-- **Alert System**: Stakeholder email drafts with recipient routing (Creative Lead, AdOps, IT, Legal)
+- **Alert System**: SMTP email (if configured) or console draft; recipient routing (Creative Lead, AdOps, IT, Legal)
 - **MCP Context Schema**: [mcp_context_schema.json](mcp_context_schema.json) – defines LLM-visible data structure
 - **Sample Communication**: [stakeholder_email.md](stakeholder_email.md) – demonstrates professional escalation
 
