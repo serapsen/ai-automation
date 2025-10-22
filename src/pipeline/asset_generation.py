@@ -2,6 +2,7 @@ import base64
 import io
 import os
 import random
+import requests
 from typing import Dict, Tuple
 
 from PIL import Image, ImageDraw, ImageFont
@@ -74,6 +75,45 @@ def _save_image(im: Image.Image, path: str):
     im.save(path, format="PNG")
 
 
+def _try_azure_openai_generate(prompt: str, size_square: int) -> Image.Image | None:
+    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+    api_key = os.getenv("AZURE_OPENAI_API_KEY")
+    deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT") or os.getenv("DEPLOYMENT_NAME")
+    api_version = os.getenv("OPENAI_API_VERSION", "2024-04-01-preview")
+    style = os.getenv("AZURE_OPENAI_IMAGE_STYLE", "vivid")
+    quality = os.getenv("AZURE_OPENAI_IMAGE_QUALITY", "standard")
+    if not endpoint or not api_key or not deployment:
+        return None
+    try:
+        from openai import AzureOpenAI
+    except Exception as e:
+        logger.warning("openai package not available for Azure OpenAI: %s", e)
+        return None
+    try:
+        client = AzureOpenAI(api_version=api_version, azure_endpoint=endpoint, api_key=api_key)
+        resp = client.images.generate(model=deployment, prompt=prompt, size=f"{size_square}x{size_square}", n=1, style=style, quality=quality)
+        # Prefer b64 if available; otherwise download URL
+        try:
+            b64 = resp.data[0].b64_json
+            if b64:
+                img_bytes = base64.b64decode(b64)
+                return Image.open(io.BytesIO(img_bytes)).convert("RGB")
+        except Exception:
+            pass
+        try:
+            url = resp.data[0].url
+            if url:
+                r = requests.get(url, timeout=30)
+                r.raise_for_status()
+                return Image.open(io.BytesIO(r.content)).convert("RGB")
+        except Exception:
+            pass
+        return None
+    except Exception as e:
+        logger.error("Azure OpenAI image generation failed: %s", e)
+        return None
+
+
 def _try_openai_generate(prompt: str, size_square: int, api_key: str | None, model: str | None) -> Image.Image | None:
     if not api_key:
         return None
@@ -112,9 +152,14 @@ def generate_image(product: str, brief: Dict, aspect: str, out_path: str) -> str
 
     im = None
     if aspect == "1:1":
-        im = _try_openai_generate(prompt, 1024, api_key, model)
+        # Try Azure OpenAI first (if configured), then OpenAI Images API
+        im = _try_azure_openai_generate(prompt, 1024)
+        if im is None:
+            im = _try_openai_generate(prompt, 1024, api_key, model)
     else:
-        base = _try_openai_generate(prompt, 1024, api_key, model)
+        base = _try_azure_openai_generate(prompt, 1024)
+        if base is None:
+            base = _try_openai_generate(prompt, 1024, api_key, model)
         if base is not None:
             im = _resize_to_aspect(base, size)
 

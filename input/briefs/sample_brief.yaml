@@ -4,7 +4,7 @@ products:
 region: EMEA
 audience: Gen Z
 overview: Social ads for Spring drop
-message: "Step into Spring & Bold comfort for everyday moves"
+message: "Step into Spring & Bold comfort for everyday moves Test"
 assets_root: input/assets
 output_root: output
 aspect_ratios: ["1:1", "9:16", "16:9"]
