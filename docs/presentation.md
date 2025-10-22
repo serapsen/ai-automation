@@ -18,7 +18,7 @@
 - **Architecture**: [architecture_diagram.mmd](architecture_diagram.mmd) – refined with layers and modern AI models
 - **Data Flow**: [data_flow_diagram.mmd](data_flow_diagram.mmd) – transformations and metadata tracking
 - **Storage**: Local `input/assets/` with optional Azure Blob uploads
-- **GenAI**: OpenAI Images API (gpt-image-1 or dall-e-3) with Pillow fallback for resilience
+- **GenAI**: DALL·E 3 (Azure OpenAI or OpenAI.com) with Pillow fallback for resilience
 - **Outputs**: Structured `output/{product}/{aspect}/` with naming conventions
 - **Compliance**: Automated brand color and logo presence checks
 
@@ -54,8 +54,15 @@
      ```
    - Optional GenAI (for real image generation; else Pillow placeholders):
      ```
+     # Option A: Azure OpenAI (preferred when available)
+     AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/
+     AZURE_OPENAI_API_KEY=...
+     AZURE_OPENAI_DEPLOYMENT=dall-e-3
+     OPENAI_API_VERSION=2024-04-01-preview
+
+     # Option B: OpenAI.com
      OPENAI_API_KEY=...
-     OPENAI_IMAGE_MODEL=gpt-image-1
+     OPENAI_IMAGE_MODEL=dall-e-3
      ```
    - Optional SMTP email (SendGrid implicit TLS 465 example):
      ```

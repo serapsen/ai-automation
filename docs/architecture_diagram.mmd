@@ -14,7 +14,7 @@ flowchart TB
 
   subgraph "Asset Generation Layer"
     G["Reuse Path<br/>Copy to output<br/>Preserve quality"]
-    H["Image Generator<br/>OpenAI Images API<br/>gpt-image-1 or dall-e-3<br/>1024x1024 base"]
+    H["Image Generator<br/>DALL·E 3 (Azure OpenAI or OpenAI.com)<br/>1024x1024 base"]
     I{"API<br/>Success?"}
     J["Fallback Generator<br/>Pillow RGB placeholder<br/>Product name overlay"]
   end

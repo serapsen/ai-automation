@@ -15,7 +15,7 @@ flowchart TB
 
   subgraph "Pipeline Execution Layer"
     H["Trigger Pipeline<br/>main.run_pipeline()<br/>Pass brief path"]
-    I["Asset Processing<br/>OpenAI Images API<br/>gpt-image-1/dall-e-3<br/>or Pillow fallback"]
+    I["Asset Processing<br/>DALL·E 3 (Azure OpenAI or OpenAI.com)<br/>or Pillow fallback"]
     J["Post-Processing<br/>Text overlay<br/>Logo overlay<br/>Compliance checks"]
     K["Output Creation<br/>3 Aspect Ratios<br/>1x1, 9x16, 16x9<br/>Organized by product"]
   end

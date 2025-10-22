@@ -4,7 +4,7 @@ products:
 region: EMEA
 audience: Gen Z
 overview: Social ads for Spring drop
-message: "Step into Spring & Bold comfort for everyday moves Test"
+message: "Step into Spring & Bold comfort for everyday moves"
 assets_root: input/assets
 output_root: output
 aspect_ratios: ["1:1", "9:16", "16:9"]
@@ -14,7 +14,7 @@ brand:
     primary: "#FFD000"
     secondary: "#222222"
   logo_path: "input/assets/brand/logo.png"
-openai_image_model: gpt-image-1
+openai_image_model: dall-e-3
 notifications:
   to: ["sen.serap@outlook.com", "sen.serapp@gmail.com"]
   cc: "sen.serap@outlook.com,sen.serapp@gmail.com"

@@ -14,7 +14,7 @@ brand:
     primary: "#0052FF"
     secondary: "#111111"
   logo_path: "input/assets/brand/logo.png"
-openai_image_model: gpt-image-1
+openai_image_model: dall-e-3
 notifications:
   to: ["sen.serap@outlook.com", "sen.serapp@gmail.com"]
   cc: "sen.serap@outlook.com,sen.serapp@gmail.com"

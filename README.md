@@ -63,14 +63,14 @@ python -m venv .venv
 source ./.venv/Scripts/activate
 pip install -r requirements.txt
 ```
-3. Create `.env` from `.env.example` (or `ENV.EXAMPLE.txt`) and set `OPENAI_API_KEY` (optional) and SMTP variables (`SMTP_*`) if you want email sending.
+3. Create `.env` from `.env.example` (or `ENV.EXAMPLE.txt`) and set image generation keys (Azure OpenAI `AZURE_OPENAI_*` or OpenAI.com `OPENAI_API_KEY`) and SMTP variables (`SMTP_*`) if you want email sending.
 
 ## Run the Pipeline
 ```
 python -m main --brief input/briefs/sample_brief.yaml
 ```
 - Outputs to `output/{product}/{aspect}/`.
-- If `OPENAI_API_KEY` is not set, placeholder images are generated locally with Pillow.
+- If neither Azure OpenAI nor `OPENAI_API_KEY` is configured, placeholder images are generated locally with Pillow.
 
 ## Run the Agent Monitor
 - Run once:
@@ -137,12 +137,34 @@ output/
 ## Environment
 - `.env` keys:
   - `OPENAI_API_KEY` (optional)
-  - `OPENAI_IMAGE_MODEL=gpt-image-1` (optional)
+  - `OPENAI_IMAGE_MODEL=dall-e-3` (optional)
+  - Azure OpenAI (optional): `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_DEPLOYMENT` (e.g., `dall-e-3`), `OPENAI_API_VERSION` (e.g., `2024-04-01-preview`) and optional `AZURE_OPENAI_IMAGE_STYLE`/`AZURE_OPENAI_IMAGE_QUALITY`
   - `LOG_LEVEL=INFO`
   - `FONT_PATH` (optional, path to a .ttf font)
   - `AZURE_STORAGE_CONNECTION_STRING` (preferred) or `AZURE_STORAGE_ACCOUNT`/`AZURE_STORAGE_KEY`
   - `AZURE_BLOB_CONTAINER` and optional `AZURE_BLOB_PREFIX`
   - `SMTP_*` keys for email (see Email sections below)
+
+- Precedence for image generation: Azure OpenAI → OpenAI.com → placeholder.
+
+### Image generation (Azure OpenAI and OpenAI.com)
+
+- Azure OpenAI (preferred when configured):
+```
+AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/
+AZURE_OPENAI_API_KEY=...
+AZURE_OPENAI_DEPLOYMENT=dall-e-3
+OPENAI_API_VERSION=2024-04-01-preview
+# Optional rendering hints
+AZURE_OPENAI_IMAGE_STYLE=vivid
+AZURE_OPENAI_IMAGE_QUALITY=standard
+```
+
+- OpenAI.com (fallback if Azure not configured):
+```
+OPENAI_API_KEY=sk-...
+OPENAI_IMAGE_MODEL=dall-e-3
+```
 
 ### Azure example (.env)
 ```
@@ -150,7 +172,7 @@ LOG_LEVEL=INFO
 
 # OpenAI (optional)
 OPENAI_API_KEY=
-OPENAI_IMAGE_MODEL=gpt-image-1
+OPENAI_IMAGE_MODEL=dall-e-3
 
 # Azure Blob Storage
 # Preferred: single connection string
@@ -225,13 +247,14 @@ EMAIL_ATTACH_SUMMARY=true
   - Check `_final.png` files under `output/{product}/{aspect}/` — these include the logo overlay if present.
 
 ## OpenAI Image Models
-- **Supported models for image generation**: `gpt-image-1`, `dall-e-3`.
-- If an unsupported model is set (e.g., `gpt-4o`), the app logs a warning and falls back to `gpt-image-1` automatically.
+- **Supported model for OpenAI.com**: `dall-e-3`.
+- If an unsupported model is set (e.g., `gpt-4o`), the app logs a warning and may skip OpenAI.com generation.
 - You can set the model via `.env` (`OPENAI_IMAGE_MODEL`) or per-brief (`openai_image_model`).
+- For Azure OpenAI, set `AZURE_OPENAI_DEPLOYMENT` (e.g., `dall-e-3`) and `OPENAI_API_VERSION`; `OPENAI_IMAGE_MODEL` applies only to the OpenAI.com path.
 
 ## Key Design Decisions
 - **Local-first, cloud-ready**: Filesystem storage with optional extension to Azure Blob (easily adaptable to other clouds).
-- **Model validation & fallback**: Unsupported image models automatically fall back to `gpt-image-1`.
+- **Model validation & fallback**: Unsupported image models are ignored or defaulted to a supported model.
 - **Graceful resilience**: Pillow placeholder images used if API is unavailable.
 - **Windows-safe paths**: Aspect directories use `1x1`, `9x16`, `16x9` on disk.
 - **Accurate variant counting**: Agent counts only `*_final.png` to avoid inflated counts.
@@ -251,10 +274,10 @@ See `input/briefs/sample_brief.yaml`.
 - Text moderation is a simple keyword blocker for demo purposes.
 
 ## Troubleshooting
-- **No images generated**: Ensure `OPENAI_API_KEY` is set or expect Pillow placeholders.
+- **No images generated**: Ensure Azure OpenAI (`AZURE_OPENAI_*`) or `OPENAI_API_KEY` is set; otherwise the app uses Pillow placeholders.
 - **Logo not applied**: Verify `brand.logo_path` exists (e.g., `input/assets/brand/logo.png`).
 - **Fonts look off**: Set `FONT_PATH` to a valid `.ttf`.
-- **Model errors**: If using unsupported models (e.g., `gpt-4o` for Images API), the app falls back to `gpt-image-1` and logs a warning.
+- **Model errors**: If using unsupported models (e.g., `gpt-4o` for Images API), the app logs a warning.
 
 ## Demo Recording Checklist
 - **Prepare**: Ensure `.venv` is created, deps installed, and `.env` configured (Azure/OpenAI as desired).
