@@ -93,13 +93,13 @@ def _compose_email(brief_path: str, summary: Dict, variant_target: int) -> Tuple
     return subject, text, html
 
 
-def process_once(briefs_dir: str, variant_target: int) -> int:
+def process_once(briefs_dir: str, variant_target: int, force: bool = False) -> int:
     st = _load_state()
     found = _list_briefs(briefs_dir)
     processed = 0
     for path in found:
         mtime = os.path.getmtime(path)
-        if st.get(path) == mtime:
+        if (not force) and st.get(path) == mtime:
             continue
         logger.info("processing brief -> %s", path)
         try:
@@ -157,15 +157,20 @@ def main():
     parser.add_argument("--interval", type=int, default=10)
     parser.add_argument("--variant_target", type=int, default=3)
     parser.add_argument("--once", action="store_true")
+    parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
 
     if args.once or not args.watch:
-        process_once(args.briefs_dir, args.variant_target)
+        n = process_once(args.briefs_dir, args.variant_target, args.force)
+        if n:
+            logger.info("processed %d brief(s)", n)
+        else:
+            logger.info("no new briefs to process")
         return
 
     while True:
         try:
-            n = process_once(args.briefs_dir, args.variant_target)
+            n = process_once(args.briefs_dir, args.variant_target, args.force)
             if n:
                 logger.info("processed %d brief(s)", n)
             time.sleep(args.interval)

@@ -1,5 +1,6 @@
 import os
 import smtplib
+import ssl
 import mimetypes
 from typing import List, Optional
 from email.mime.text import MIMEText
@@ -36,7 +37,11 @@ def render_email_template(template_name: str, context: dict) -> Optional[str]:
 
 def send_email(subject: str, body_text: str, to_addrs: Optional[List[str]] = None, cc_addrs: Optional[List[str]] = None, body_html: Optional[str] = None, attachments: Optional[list] = None) -> bool:
     host = os.getenv("SMTP_HOST")
-    port = int(os.getenv("SMTP_PORT", "587"))
+    port_raw = os.getenv("SMTP_PORT")
+    try:
+        port = int(port_raw) if port_raw else None
+    except Exception:
+        port = None
     user = os.getenv("SMTP_USER")
     password = os.getenv("SMTP_PASS")
     from_addr = os.getenv("SMTP_FROM")
@@ -45,8 +50,8 @@ def send_email(subject: str, body_text: str, to_addrs: Optional[List[str]] = Non
     if cc_addrs is None:
         cc_addrs = _split_list(os.getenv("SMTP_CC"))
 
-    if not host or not from_addr or not to_addrs:
-        logger.info("SMTP not configured (missing host/from/to); skipping email send")
+    if not host or not from_addr or not to_addrs or not port:
+        logger.info("SMTP not configured (missing host/from/to/port); skipping email send")
         return False
 
     msg = MIMEMultipart("mixed")
@@ -101,17 +106,26 @@ def send_email(subject: str, body_text: str, to_addrs: Optional[List[str]] = Non
     recipients = list(dict.fromkeys((to_addrs or []) + (cc_addrs or [])))
 
     try:
-        with smtplib.SMTP(host, port, timeout=20) as server:
-            server.ehlo()
-            if os.getenv("SMTP_STARTTLS", "true").lower() in ("1", "true", "yes"): 
-                try:
-                    server.starttls()
-                    server.ehlo()
-                except Exception:
-                    pass
-            if user and password:
-                server.login(user, password)
-            server.sendmail(from_addr, recipients, msg.as_string())
+        use_ssl = (port == 465) or (os.getenv("SMTP_SSL", "").lower() in ("1", "true", "yes"))
+        if use_ssl:
+            context = ssl.create_default_context()
+            with smtplib.SMTP_SSL(host, port, timeout=20, context=context) as server:
+                server.ehlo()
+                if user and password:
+                    server.login(user, password)
+                server.sendmail(from_addr, recipients, msg.as_string())
+        else:
+            with smtplib.SMTP(host, port, timeout=20) as server:
+                server.ehlo()
+                if os.getenv("SMTP_STARTTLS", "true").lower() in ("1", "true", "yes"):
+                    try:
+                        server.starttls(context=ssl.create_default_context())
+                        server.ehlo()
+                    except Exception:
+                        pass
+                if user and password:
+                    server.login(user, password)
+                server.sendmail(from_addr, recipients, msg.as_string())
         logger.info("email sent to %s (cc=%s)", ", ".join(to_addrs), ", ".join(cc_addrs or []))
         return True
     except Exception as e:
