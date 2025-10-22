@@ -59,8 +59,8 @@ ai-automation/
 1. Install Python 3.10+.
 2. Create venv and install deps:
 ```
-py -3 -m venv .venv
-.\.venv\Scripts\activate
+python -m venv .venv
+source ./.venv/Scripts/activate
 pip install -r requirements.txt
 ```
 3. Create `.env` from `.env.example` (or `ENV.EXAMPLE.txt`) and set `OPENAI_API_KEY` (optional) and SMTP variables (`SMTP_*`) if you want email sending.
@@ -97,7 +97,7 @@ python -m agent.monitor --watch --interval 10 --force
 ## Run Tests
 Use Python's builtin unittest discovery. On Windows + Git Bash, using the venv's interpreter path is most reliable:
 ```
-./.venv/Scripts/python.exe -m unittest discover -v
+source ./.venv/Scripts/activate && python -m unittest discover -v
 ```
 If you prefer to activate the venv first:
 ```
@@ -221,7 +221,7 @@ EMAIL_ATTACH_SUMMARY=true
 - The logo is auto-scaled to ~1/8 of image width and placed top-left with a margin (see `src/pipeline/post_processor.py` → `overlay_logo()`).
 - If the file is missing or invalid, the pipeline completes and saves images without a logo (no error).
 - To verify:
-  - Run `./.venv/Scripts/python.exe -m main --brief input/briefs/sample_brief.yaml`.
+  - Run `source ./.venv/Scripts/activate && python -m main --brief input/briefs/sample_brief.yaml`.
   - Check `_final.png` files under `output/{product}/{aspect}/` — these include the logo overlay if present.
 
 ## OpenAI Image Models
