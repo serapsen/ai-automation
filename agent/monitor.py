@@ -10,6 +10,7 @@ from src.utils.logger import get_logger
 from src.pipeline.asset_ingestion import load_brief, aspect_to_dir
 from main import run_pipeline
 from src.notify.emailer import send_email, render_email_template
+from src.utils.hash import sha1_file
 
 logger = get_logger("agent.monitor")
 
@@ -99,7 +100,22 @@ def process_once(briefs_dir: str, variant_target: int, force: bool = False) -> i
     processed = 0
     for path in found:
         mtime = os.path.getmtime(path)
-        if (not force) and st.get(path) == mtime:
+        file_hash = sha1_file(path) or ""
+        st_val = st.get(path)
+        unchanged = False
+        if not force:
+            if isinstance(st_val, dict):
+                prev_hash = st_val.get("sha1")
+                prev_mtime = st_val.get("mtime")
+                if prev_hash and file_hash and prev_hash == file_hash:
+                    unchanged = True
+                elif prev_mtime is not None and prev_mtime == mtime:
+                    unchanged = True
+            else:
+                # legacy float/int state comparing only mtime
+                if st_val == mtime:
+                    unchanged = True
+        if unchanged:
             continue
         logger.info("processing brief -> %s", path)
         try:
@@ -141,7 +157,7 @@ def process_once(briefs_dir: str, variant_target: int, force: bool = False) -> i
                     cc_addrs = cc_addrs or _as_list(extra.get("cc"))
 
             send_email(subject=subject, body_text=body, body_html=html, attachments=attachments, to_addrs=to_addrs or None, cc_addrs=cc_addrs or None)
-            st[path] = mtime
+            st[path] = {"mtime": mtime, "sha1": file_hash}
             processed += 1
         except Exception as e:
             logger.error("pipeline error: %s", e)
