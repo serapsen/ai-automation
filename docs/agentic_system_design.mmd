@@ -10,14 +10,14 @@ flowchart TB
     D["Scan Briefs<br/>input/briefs/*.yaml<br/>_list_briefs()"]
     E{"New or<br/>Modified?"}
     F["Load Brief<br/>load_brief()<br/>YAML/JSON to Dict"]
-    G["Extract Metadata<br/>Products: 2+<br/>Region, Audience<br/>Message, Aspects"]
+    G["Extract Metadata<br/>Products: 2+<br/>Region, Audience<br/>Message, Aspects<br/>Languages: list (en + optional)"]
   end
 
   subgraph "Pipeline Execution Layer"
     H["Trigger Pipeline<br/>main.run_pipeline()<br/>Pass brief path"]
-    I["Asset Processing<br/>DALL·E 3 (Azure OpenAI or OpenAI.com)<br/>or Pillow fallback"]
-    J["Post-Processing<br/>Text overlay<br/>Logo overlay<br/>Compliance checks"]
-    K["Output Creation<br/>3 Aspect Ratios<br/>1x1, 9x16, 16x9<br/>Organized by product"]
+    I["Asset Processing<br/>Per-language (en + optional)<br/>DALL·E 3 (Azure/OpenAI) or Pillow"]
+    J["Post-Processing<br/>Text overlay: placeholders/reused only<br/>Logo overlay for all<br/>Compliance checks"]
+    K["Output Creation<br/>3 Aspect Ratios<br/>1x1, 9x16, 16x9<br/>Files suffixed by lang (_en/_tr)"]
   end
 
   subgraph "Monitoring & Analytics Layer"

@@ -1,7 +1,7 @@
 %% Mermaid diagram: Creative Automation Pipeline Architecture
 flowchart TB
   subgraph "Input Layer"
-    A["Campaign Brief<br/>YAML/JSON<br/>2+ products<br/>region, audience, message"]
+    A["Campaign Brief<br/>YAML/JSON<br/>2+ products<br/>region, audience, message<br/>languages: list"]
     B["Input Assets<br/>input/assets/{product}/{aspect}/<br/>Reusable existing creatives"]
     C["Brand Assets<br/>logo.png<br/>colors.primary"]
   end
@@ -14,13 +14,13 @@ flowchart TB
 
   subgraph "Asset Generation Layer"
     G["Reuse Path<br/>Copy to output<br/>Preserve quality"]
-    H["Image Generator<br/>DALL·E 3 (Azure OpenAI or OpenAI.com)<br/>1024x1024 base"]
+    H["Image Generator<br/>DALL·E 3 (Azure OpenAI or OpenAI.com)<br/>Per-language (en + optional)<br/>1024x1024 base"]
     I{"API<br/>Success?"}
     J["Fallback Generator<br/>Pillow RGB placeholder<br/>Product name overlay"]
   end
 
   subgraph "Post-Processing Layer"
-    K["Text Overlay<br/>overlay_text()<br/>Campaign message<br/>Brand color + alpha"]
+    K["Text Overlay<br/>overlay_text()<br/>Per-language (placeholders/reused only)<br/>Brand color + alpha"]
     L["Logo Overlay<br/>overlay_logo()<br/>Brand identity<br/>1/8 width, top-left"]
     M["Compliance Check<br/>brand_compliance_summary()<br/>Color usage, logo presence"]
     N["Text Moderation<br/>moderate_text()<br/>Prohibited words filter"]
@@ -31,7 +31,7 @@ flowchart TB
     P["1x1 Square<br/>1024x1024<br/>Social feeds"]
     Q["9x16 Portrait<br/>1080x1920<br/>Stories, Reels"]
     R["16x9 Landscape<br/>1920x1080<br/>YouTube, Display"]
-    S["Naming Convention<br/>exist_N_final.png<br/>gen_N_final.png"]
+    S["Naming Convention<br/>exist_N_{lang}_final.png<br/>gen_1_{lang}_final.png"]
   end
 
   subgraph "Cloud Storage"

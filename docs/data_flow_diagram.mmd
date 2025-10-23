@@ -1,7 +1,7 @@
 %% Mermaid diagram: Data Flow & Transformations
 flowchart TB
   subgraph "Input Layer"
-    A1["Campaign Brief<br/>products: 2+<br/>region, audience<br/>message"]
+    A1["Campaign Brief<br/>products: 2+<br/>region, audience<br/>message<br/>languages: list"]
     A2["Brand Config<br/>colors.primary<br/>logo_path"]
     A3["Existing Assets<br/>input/assets/{product}/{aspect}/<br/>*.png, *.jpg"]
   end
@@ -14,21 +14,21 @@ flowchart TB
 
   subgraph "Asset Generation"
     C1["Reuse Path<br/>Copy existing<br/>to output"]
-    C2["Image Generator<br/>DALL·E 3 (Azure OpenAI or OpenAI.com)"]
+    C2["Image Generator<br/>Per-language (en + optional)<br/>DALL·E 3 (Azure/OpenAI)"]
     C3["Fallback Generator<br/>Pillow placeholder<br/>with product name"]
     C4{"API<br/>Success?"}
   end
 
   subgraph "Post-Processing"
     D1["Aspect Resizing<br/>1024x1024 base<br/>Crop/resize to<br/>1x1, 9x16, 16x9"]
-    D2["Text Overlay<br/>Campaign message<br/>Alpha composite<br/>Brand color"]
+    D2["Text Overlay<br/>Per-language overlays<br/>(placeholders/reused only)"]
     D3["Logo Overlay<br/>Brand identity<br/>1/8 width<br/>Top-left"]
     D4["Compliance Check<br/>Brand color used?<br/>Logo present?<br/>Text moderation"]
   end
 
   subgraph "Output Layer"
     E1["File Organization<br/>output/{product}/{aspect}/<br/>AlphaSneaker/1x1/<br/>AlphaSneaker/9x16/<br/>AlphaSneaker/16x9/"]
-    E2["Naming Convention<br/>Reused: exist_N.png<br/>Generated: gen_N.png<br/>Final: *_final.png"]
+    E2["Naming Convention<br/>Reused: exist_N_{lang}_final.png<br/>Generated: gen_1_{lang}_final.png"]
   end
 
   subgraph "Metadata & Monitoring"

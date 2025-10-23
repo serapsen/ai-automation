@@ -19,6 +19,7 @@
 - **Data Flow**: [data_flow_diagram.mmd](data_flow_diagram.mmd) – transformations and metadata tracking
 - **Storage**: Local `input/assets/` with optional Azure Blob uploads
 - **GenAI**: DALL·E 3 (Azure OpenAI or OpenAI.com) with Pillow fallback for resilience
+- **Localization**: English plus optional languages per brief; optional translation via Azure/OpenAI Chat; per-language outputs with `_*_{lang}_final.png`
 - **Outputs**: Structured `output/{product}/{aspect}/` with naming conventions
 - **Compliance**: Automated brand color and logo presence checks
 
@@ -31,8 +32,8 @@
 - Entrypoint: [`main.py`](../main.py) → `run_pipeline()`.
 - Modules:
   - [`src/pipeline/asset_ingestion.py`](../src/pipeline/asset_ingestion.py): load brief, discover assets, normalize aspects.
-  - [`src/pipeline/asset_generation.py`](../src/pipeline/asset_generation.py): OpenAI image gen (if key) or Pillow placeholder; aspect resize.
-  - [`src/pipeline/post_processor.py`](../src/pipeline/post_processor.py): text overlay, logo overlay, moderation, compliance summary.
+  - [`src/pipeline/asset_generation.py`](../src/pipeline/asset_generation.py): per-language image gen via DALL·E 3 (Azure/OpenAI) or placeholder; aspect resize; meta sidecar with source.
+  - [`src/pipeline/post_processor.py`](../src/pipeline/post_processor.py): text overlay (placeholders and reused assets only), logo overlay, moderation, compliance summary.
   - [`src/utils/logger.py`](../src/utils/logger.py): configurable logging.
 - Aspect ratios: `1:1`, `9:16`, `16:9`.
 - Reuse existing assets if present, otherwise generate.
@@ -53,17 +54,26 @@
      STORAGE_BACKEND=none
      ```
    - Optional GenAI (for real image generation; else Pillow placeholders):
-     ```
-     # Option A: Azure OpenAI (preferred when available)
-     AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/
-     AZURE_OPENAI_API_KEY=...
-     AZURE_OPENAI_DEPLOYMENT=dall-e-3
-     OPENAI_API_VERSION=2024-04-01-preview
+    ```
+    # Option A: Azure OpenAI (preferred when available)
+    AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/
+    AZURE_OPENAI_API_KEY=...
+    AZURE_OPENAI_DEPLOYMENT=dall-e-3
+    OPENAI_API_VERSION=2024-04-01-preview
 
-     # Option B: OpenAI.com
-     OPENAI_API_KEY=...
-     OPENAI_IMAGE_MODEL=dall-e-3
-     ```
+    # Option B: OpenAI.com
+    OPENAI_API_KEY=...
+    OPENAI_IMAGE_MODEL=dall-e-3
+    ```
+  - Optional Localization:
+    ```
+    # Brief example
+    languages: ["en", "tr"]  # English always included
+
+    # Translation providers (optional)
+    AZURE_OPENAI_TRANSLATE_DEPLOYMENT=gpt-4o-mini  # Azure Chat
+    OPENAI_TRANSLATE_MODEL=gpt-4o-mini             # OpenAI.com fallback
+    ```
    - Optional SMTP email (SendGrid implicit TLS 465 example):
      ```
      SMTP_HOST=smtp.sendgrid.net
@@ -91,7 +101,8 @@
    ```
    python -m agent.monitor --once --force
    ```
-   - Counts variants per product/aspect and either sends SMTP email (if configured) or logs a draft to console.
+    - Counts variants per product/aspect and either sends SMTP email (if configured) or logs a draft to console.
+    - With localization enabled, files are suffixed by language (e.g., `_en_final.png`, `_tr_final.png`). AI images keep logo only; placeholders and reused assets include a bottom message bar per language.
 
 ## Task 3 – Agentic System & Comms
 - **System Design**: [agentic_system_design.mmd](agentic_system_design.mmd) – enhanced with detailed orchestration flow

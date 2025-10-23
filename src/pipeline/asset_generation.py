@@ -2,6 +2,7 @@ import base64
 import io
 import os
 import random
+import json
 import requests
 from typing import Dict, Tuple
 
@@ -73,6 +74,14 @@ def _resize_to_aspect(im: Image.Image, target: Tuple[int, int]) -> Image.Image:
 def _save_image(im: Image.Image, path: str):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     im.save(path, format="PNG")
+
+
+def _save_meta(path: str, meta: Dict):
+    try:
+        with open(path + ".meta.json", "w", encoding="utf-8") as f:
+            json.dump(meta, f)
+    except Exception:
+        pass
 
 
 def _try_azure_openai_generate(prompt: str, size_square: int) -> Image.Image | None:
@@ -148,25 +157,48 @@ def generate_image(product: str, brief: Dict, aspect: str, out_path: str) -> str
     msg = brief.get("message", "")
     region = brief.get("region") or brief.get("target_region") or ""
     audience = brief.get("audience") or brief.get("target_audience") or ""
-    prompt = f"Product: {product}. Audience: {audience}. Region: {region}. Message: {msg}. Stylized, ad-ready."
+    lang = brief.get("language") or brief.get("target_language") or "en"
+    prompt = (
+        f"Product: {product}. Audience: {audience}. Region: {region}. "
+        f"Language: {lang}. Message: {msg}. Stylized, ad-ready."
+    )
 
     im = None
+    source = None
     if aspect == "1:1":
         # Try Azure OpenAI first (if configured), then OpenAI Images API
         im = _try_azure_openai_generate(prompt, 1024)
-        if im is None:
+        if im is not None:
+            source = "azure"
+        else:
             im = _try_openai_generate(prompt, 1024, api_key, model)
+            if im is not None:
+                source = "openai"
     else:
         base = _try_azure_openai_generate(prompt, 1024)
-        if base is None:
+        if base is not None:
+            source = "azure"
+        else:
             base = _try_openai_generate(prompt, 1024, api_key, model)
+            if base is not None:
+                source = "openai"
         if base is not None:
             im = _resize_to_aspect(base, size)
 
     if im is None:
+        source = "placeholder"
         im = _placeholder_image(product, size, primary)
 
     im = _resize_to_aspect(im, size)
     _save_image(im, out_path)
+    try:
+        _save_meta(out_path, {
+            "source": source or "unknown",
+            "product": product,
+            "aspect": aspect,
+            "model": (model or "") if isinstance(model, str) else "",
+        })
+    except Exception:
+        pass
     logger.info("generated asset -> %s", out_path)
     return out_path

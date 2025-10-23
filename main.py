@@ -1,6 +1,7 @@
 import argparse
 import os
 import shutil
+import json
 from typing import Dict, List
 
 from dotenv import load_dotenv
@@ -12,6 +13,7 @@ from src.pipeline.post_processor import ensure_dir, overlay_text, overlay_logo, 
 from src.storage.base import get_storage
 from src.reporting.summary import compute_uniqueness, write_summary, write_summary_csv
 from src.pipeline.brief import validate_and_normalize
+from src.utils.translate import translate_message
 
 logger = get_logger("main")
 
@@ -43,6 +45,20 @@ def run_pipeline(brief_path: str) -> Dict:
     if region or audience:
         logger.info("brief: region=%s audience=%s", region, audience)
 
+    languages_raw = brief.get("languages") or ["en"]
+    if isinstance(languages_raw, str):
+        languages = [languages_raw]
+    else:
+        languages = list(languages_raw)
+    norm_langs: List[str] = []
+    for l in languages:
+        s = str(l).strip().lower()
+        if s and s not in norm_langs:
+            norm_langs.append(s)
+    if "en" not in norm_langs:
+        norm_langs = ["en"] + norm_langs
+    languages = norm_langs
+
     mod = moderate_text(message)
     if mod:
         logger.warning("message contains prohibited terms: %s", mod)
@@ -62,27 +78,46 @@ def run_pipeline(brief_path: str) -> Dict:
                 for i, src in enumerate(existing):
                     tmp = os.path.join(out_dir, f"exist_{i+1}.png")
                     _copy(src, tmp)
-                    over = os.path.join(out_dir, f"exist_{i+1}_msg.png")
-                    overlay_text(tmp, message, over, brand_color)
-                    with_logo = os.path.join(out_dir, f"exist_{i+1}_final.png")
-                    overlay_logo(over, logo_path, with_logo)
+                    for lang in languages:
+                        msg_lang = translate_message(message, lang)
+                        over = os.path.join(out_dir, f"exist_{i+1}_{lang}_msg.png")
+                        overlay_text(tmp, msg_lang, over, brand_color)
+                        with_logo = os.path.join(out_dir, f"exist_{i+1}_{lang}_final.png")
+                        overlay_logo(over, logo_path, with_logo)
+                        used.append(with_logo)
+                        if dbx.enabled():
+                            rel = os.path.join(product, aspect_to_dir(aspect), os.path.basename(with_logo))
+                            dbx.upload(with_logo, rel)
+            else:
+                for lang in languages:
+                    gen_path = os.path.join(out_dir, f"gen_1_{lang}.png")
+                    brief_lang = dict(brief)
+                    if lang != "en":
+                        msg_lang = translate_message(message, lang)
+                    else:
+                        msg_lang = message
+                    brief_lang["language"] = lang
+                    brief_lang["message"] = msg_lang
+                    generate_image(product, brief_lang, aspect, gen_path)
+                    source = None
+                    try:
+                        with open(gen_path + ".meta.json", "r", encoding="utf-8") as mf:
+                            meta = json.load(mf)
+                            source = (meta or {}).get("source")
+                    except Exception:
+                        pass
+                    if source == "placeholder":
+                        over = os.path.join(out_dir, f"gen_1_{lang}_msg.png")
+                        overlay_text(gen_path, msg_lang, over, brand_color)
+                        src_for_logo = over
+                    else:
+                        src_for_logo = gen_path
+                    with_logo = os.path.join(out_dir, f"gen_1_{lang}_final.png")
+                    overlay_logo(src_for_logo, logo_path, with_logo)
                     used.append(with_logo)
-                    # optional Dropbox upload for final asset
                     if dbx.enabled():
                         rel = os.path.join(product, aspect_to_dir(aspect), os.path.basename(with_logo))
                         dbx.upload(with_logo, rel)
-            else:
-                gen_path = os.path.join(out_dir, f"gen_1.png")
-                generate_image(product, brief, aspect, gen_path)
-                over = os.path.join(out_dir, f"gen_1_msg.png")
-                overlay_text(gen_path, message, over, brand_color)
-                with_logo = os.path.join(out_dir, f"gen_1_final.png")
-                overlay_logo(over, logo_path, with_logo)
-                used.append(with_logo)
-                # optional Dropbox upload for generated final asset
-                if dbx.enabled():
-                    rel = os.path.join(product, aspect_to_dir(aspect), os.path.basename(with_logo))
-                    dbx.upload(with_logo, rel)
 
             comp = brand_compliance_summary(brand_color, os.path.isfile(logo_path) if logo_path else False)
             uniq = compute_uniqueness(used)

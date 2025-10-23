@@ -5,6 +5,7 @@ region: APAC
 audience: Millennials
 overview: Social ads for Summer sale in APAC
 message: "Beat the Heat & Go Further with Lightweight Comfort"
+languages: ["en", "tr"]  # or ["en", "de"]
 assets_root: input/assets
 output_root: output
 aspect_ratios: ["1:1", "9:16", "16:9"]

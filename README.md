@@ -8,6 +8,7 @@ A demo-ready local Python project that ingests campaign briefs, reuses or genera
 - **Agent**: Monitors `input/briefs/`, triggers pipeline, tracks counts, flags <3 variants, sends SMTP email if configured (or logs a draft).
 - **Docs**: Mermaid architecture and agentic diagrams, 1-slide roadmap, stakeholder email sample.
 - **Config**: `.env` for keys, logging level, optional font path.
+- **Localization**: English plus optional languages per brief via `languages: ["en", "tr"]`. Placeholders and reused assets get localized text overlay; AI images keep logo only (no bottom message bar) but prompts are language-aware.
 
 ## Project Structure
 ```
@@ -115,23 +116,26 @@ Notes:
 output/
   AlphaSneaker/
     1x1/
-      gen_1.png
-      gen_1_msg.png
-      gen_1_final.png
+      gen_1_en.png
+      gen_1_en_final.png
+      gen_1_tr.png
+      gen_1_tr_final.png
     9x16/
-      gen_1.png
-      gen_1_msg.png
-      gen_1_final.png
+      gen_1_en.png
+      gen_1_en_final.png
+      gen_1_tr.png
+      gen_1_tr_final.png
     16x9/
-      gen_1.png
-      gen_1_msg.png
-      gen_1_final.png
+      gen_1_en.png
+      gen_1_en_final.png
+      gen_1_tr.png
+      gen_1_tr_final.png
   BetaSandal/
     1x1/ ...
     9x16/ ...
     16x9/ ...
 ```
-- If reusing assets, expect names like `exist_1.png`, `exist_1_msg.png`, `exist_1_final.png`.
+- If reusing assets, expect names per language like `exist_1_en_msg.png`, `exist_1_en_final.png`, `exist_1_tr_msg.png`, `exist_1_tr_final.png`.
 - A run summary is written to `output/summary.json` with counts and compliance per product/aspect.
 
 ## Environment
@@ -139,6 +143,7 @@ output/
   - `OPENAI_API_KEY` (optional)
   - `OPENAI_IMAGE_MODEL=dall-e-3` (optional)
   - Azure OpenAI (optional): `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_DEPLOYMENT` (e.g., `dall-e-3`), `OPENAI_API_VERSION` (e.g., `2024-04-01-preview`) and optional `AZURE_OPENAI_IMAGE_STYLE`/`AZURE_OPENAI_IMAGE_QUALITY`
+  - Localization (optional): `AZURE_OPENAI_TRANSLATE_DEPLOYMENT` (Azure Chat) and `OPENAI_TRANSLATE_MODEL` (OpenAI.com fallback)
   - `LOG_LEVEL=INFO`
   - `FONT_PATH` (optional, path to a .ttf font)
   - `AZURE_STORAGE_CONNECTION_STRING` (preferred) or `AZURE_STORAGE_ACCOUNT`/`AZURE_STORAGE_KEY`
@@ -165,6 +170,20 @@ AZURE_OPENAI_IMAGE_QUALITY=standard
 OPENAI_API_KEY=sk-...
 OPENAI_IMAGE_MODEL=dall-e-3
 ```
+
+### Localization
+
+- Add languages to your brief (English is always included by default):
+```
+languages: ["en", "tr"]  # or ["en", "de"]
+```
+- Translation uses Azure OpenAI first (Chat deployment via `AZURE_OPENAI_TRANSLATE_DEPLOYMENT`), then OpenAI.com (`OPENAI_TRANSLATE_MODEL`). If neither is configured, the original message is used for non-English outputs.
+- File naming per language:
+  - Generated: `gen_1_en.png` → `gen_1_en_final.png`, `gen_1_tr.png` → `gen_1_tr_final.png`
+  - Reused assets: `exist_1_en_msg.png` → `exist_1_en_final.png`, etc.
+- Overlays:
+  - Placeholder and reused assets get a bottom message bar per language.
+  - AI-generated images do not get the bottom message bar; only the logo is applied. The prompt is language-aware.
 
 ### Azure example (.env)
 ```
