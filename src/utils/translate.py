@@ -13,6 +13,8 @@ def _normalize_lang(lang: str) -> str:
     lang = (lang or "").strip().lower()
     if lang in ("en", "eng", "english"):  # normalize English
         return "en"
+    if lang in ("tr", "turkish", "tr-tr"):
+        return "Turkish"
     return lang
 
 
@@ -29,7 +31,7 @@ def translate_message(text: str, target_lang: str) -> str:
     endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
     api_key = os.getenv("AZURE_OPENAI_API_KEY")
     deployment = os.getenv("AZURE_OPENAI_TRANSLATE_DEPLOYMENT")
-    api_version = os.getenv("OPENAI_API_VERSION", "2024-04-01-preview")
+    api_version = os.getenv("OPENAI_API_VERSION", "2024-07-01-preview")
     if endpoint and api_key and deployment:
         try:
             from openai import AzureOpenAI
@@ -43,7 +45,7 @@ def translate_message(text: str, target_lang: str) -> str:
                 temperature=0.2,
             )
             out = (resp.choices[0].message.content or "").strip()
-            if out:
+            if out and out != text:
                 return out
         except Exception as e:
             logger.warning("Azure translation failed: %s", e)
@@ -63,8 +65,24 @@ def translate_message(text: str, target_lang: str) -> str:
                 temperature=0.2,
             )
             out = (resp.choices[0].message.content or "").strip()
-            if out:
+            if out and out != text:
                 return out
+            # Retry with a stronger model if mini returns empty/unchanged
+            if _DEF_OPENAI_TRANSLATE_MODEL == "gpt-4o-mini":
+                try:
+                    resp2 = client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=[
+                            {"role": "system", "content": f"You are a helpful marketing translator. Translate the text to {target_lang}. Return ONLY the translated text. Preserve brand names and capitalization."},
+                            {"role": "user", "content": text},
+                        ],
+                        temperature=0.2,
+                    )
+                    out2 = (resp2.choices[0].message.content or "").strip()
+                    if out2 and out2 != text:
+                        return out2
+                except Exception as e2:
+                    logger.warning("OpenAI.com translation retry failed: %s", e2)
         except Exception as e:
             logger.warning("OpenAI.com translation failed: %s", e)
 

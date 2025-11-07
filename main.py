@@ -106,12 +106,9 @@ def run_pipeline(brief_path: str) -> Dict:
                             source = (meta or {}).get("source")
                     except Exception:
                         pass
-                    if source == "placeholder":
-                        over = os.path.join(out_dir, f"gen_1_{lang}_msg.png")
-                        overlay_text(gen_path, msg_lang, over, brand_color)
-                        src_for_logo = over
-                    else:
-                        src_for_logo = gen_path
+                    over = os.path.join(out_dir, f"gen_1_{lang}_msg.png")
+                    overlay_text(gen_path, msg_lang, over, brand_color)
+                    src_for_logo = over
                     with_logo = os.path.join(out_dir, f"gen_1_{lang}_final.png")
                     overlay_logo(src_for_logo, logo_path, with_logo)
                     used.append(with_logo)
